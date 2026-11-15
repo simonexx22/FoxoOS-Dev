@@ -42,11 +42,21 @@ check 'is running|status: started' 'services started by OpenRC'
 check '10\.0\.2\.15' 'DHCP address from QEMU user network'
 check 'deb\.debian\.org' 'DNS resolves deb.debian.org'
 check '1 received|0% packet loss' 'ping 1.1.1.1 succeeds'
+check 'XORG_BIN_OK' 'Xorg binary is present and executable'
+check 'LIGHTDM_BIN_OK' 'LightDM display manager binary is present'
+check 'LXQT_BIN_OK' 'LXQt session binary is present'
 check 'CALAMARES_BIN_OK' 'Calamares installer binary is present and executable'
 check 'CALAMARES_CONF_OK' 'Calamares configuration is present'
 check 'CALAMARES_BRANDING_OK' 'FoxoOS branding for Calamares is present'
 check 'CALAMARES_DESKTOP_OK' 'FoxoOS installer desktop shortcut is present'
 check 'FOXOS_DIAG_END' 'diagnostics completed'
+
+if grep -a "find: cannot delete" "${LOG}"; then
+    echo "FAIL: bootclean find cannot delete flood detected!" >&2
+    fail=1
+else
+    echo "PASS: no find cannot delete flood (bootclean cleanly skipped live mounts)"
+fi
 
 echo
 echo "log: ${LOG}"

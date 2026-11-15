@@ -8,7 +8,10 @@ fi
 
 # Documented live password. This is a demo live image, not a server.
 echo 'foxos:live' | chpasswd
-adduser foxos sudo >/dev/null 2>&1 || true
+groupadd -f autologin || true
+for _g in sudo autologin video audio input plugdev netdev dialout users; do
+	adduser foxos "$_g" >/dev/null 2>&1 || true
+done
 
 install -d -m 0755 /etc/sudoers.d
 printf '%s\n' 'foxos ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/foxos

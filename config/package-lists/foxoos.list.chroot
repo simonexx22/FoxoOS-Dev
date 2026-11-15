@@ -54,3 +54,18 @@ libkpmcore12
 polkitd
 pkexec
 
+# FoxoOS Graphical Desktop (LXQt) & Display Manager (LightDM)
+xorg
+xserver-xorg
+xserver-xorg-legacy
+xinit
+openbox
+lxqt-core
+qterminal
+pcmanfm-qt
+lightdm
+lightdm-gtk-greeter
+elogind
+libpam-elogind
+dbus-x11
+

@@ -30,9 +30,9 @@ do
 done
 
 # Late userspace: live-config creates the live user before login, then the
-# normal NetworkManager/dbus/logging stack starts.
+# normal NetworkManager/dbus/elogind/lightdm stack starts.
 add_service live-config sysinit
-for _svc in dbus network-manager rsyslog bootlogs rmnologin sudo console-setup.sh; do
+for _svc in dbus elogind lightdm network-manager rsyslog bootlogs rmnologin sudo console-setup.sh; do
 	add_service "${_svc}" default
 done
 

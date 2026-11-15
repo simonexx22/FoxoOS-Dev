@@ -33,13 +33,14 @@ if [ -e /usr/lib/os-release ]; then
 	cp -f /usr/lib/os-release /usr/lib/os-release.debian 2>/dev/null || true
 fi
 
-# Branding must survive a future base-files upgrade when FoxoOS is installed.
-for _file in /etc/issue /etc/issue.net; do
-	if ! dpkg-divert --list "$_file" 2>/dev/null | grep -q "diversion of $_file "; then
+# Branding and live fixes must survive future package upgrades.
+for _file in /etc/issue /etc/issue.net /usr/lib/init/bootclean.sh; do
+	if [ -e "$_file" ] && ! dpkg-divert --list "$_file" 2>/dev/null | grep -q "diversion of $_file "; then
 		dpkg-divert --local --no-rename --add --divert "${_file}.debian" "$_file" >/dev/null
 	fi
-	chmod 0644 "$_file"
+	[ -e "$_file" ] && chmod 0644 "$_file" || true
 done
+[ -e /usr/lib/init/bootclean.sh ] && chmod 0755 /usr/lib/init/bootclean.sh || true
 
 # Console greeting files are provided by config/includes.chroot; make sure
 # they exist even if a future refactor moves them into this hook.
