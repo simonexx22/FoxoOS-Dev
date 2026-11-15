@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Zainstaluj FoxoOS
+Name[en]=Install FoxoOS
+Name[pl]=Zainstaluj FoxoOS
+GenericName=Instalator graficzny FoxoOS
+GenericName[en]=FoxoOS GUI Installer
+GenericName[pl]=Instalator graficzny FoxoOS
+Comment=Zainstaluj system FoxoOS na dysku twardym komputera
+Comment[en]=Install FoxoOS on your hard disk
+Comment[pl]=Zainstaluj system FoxoOS na dysku twardym komputera
+Exec=calamares-install-foxoos
+Icon=install-foxoos
+Terminal=false
+Categories=Qt;System;
+StartupWMClass=calamares
+StartupNotify=true

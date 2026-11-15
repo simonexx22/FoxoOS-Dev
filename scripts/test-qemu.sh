@@ -42,6 +42,10 @@ check 'is running|status: started' 'services started by OpenRC'
 check '10\.0\.2\.15' 'DHCP address from QEMU user network'
 check 'deb\.debian\.org' 'DNS resolves deb.debian.org'
 check '1 received|0% packet loss' 'ping 1.1.1.1 succeeds'
+check 'CALAMARES_BIN_OK' 'Calamares installer binary is present and executable'
+check 'CALAMARES_CONF_OK' 'Calamares configuration is present'
+check 'CALAMARES_BRANDING_OK' 'FoxoOS branding for Calamares is present'
+check 'CALAMARES_DESKTOP_OK' 'FoxoOS installer desktop shortcut is present'
 check 'FOXOS_DIAG_END' 'diagnostics completed'
 
 echo

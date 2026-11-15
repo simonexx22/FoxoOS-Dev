@@ -180,3 +180,59 @@ udev pozostaje.
   - Czyste wyłączenie zasilania (`poweroff -f` -> `reboot: Power down`): PASS
   - Wszystkie 11 asercji testowych: PASS
 
+
+## 12. Wdrożenie instalatora graficznego GUI (Calamares) (2026-11-15)
+
+- **Cel**: Dodanie graficznego instalatora GUI (Calamares) do obrazu Live ISO FoxoOS oraz środowiska roboczego.
+- **Wybór komponentu i zgodność z architekturą FoxoOS**:
+  - Wybrano **Calamares 3.3.14-1** oraz pakiet konfiguracji bazowej **calamares-settings-debian 13.0.13-1** z repozytorium Debian 13 (trixie) main.
+  - Zweryfikowano zależności: Calamares i pakiety towarzyszące (Qt6, KF6, libkpmcore12, cryptsetup, polkitd) **w 100% nie wymagają systemd ani systemd-sysv** i nie naruszają pinu APT.
+  - Wykorzystano wbudowany w Calamares moduł `services-openrc`, który zarządza usługami w instalowanym systemie za pomocą polecenia `rc-update` (zamiast modułu `services-systemd`).
+- **Wdrożona konfiguracja i moduły Calamares (`/etc/calamares/`)**:
+  - `settings.conf`:
+    - Ścieżka wyszukiwania modułów: `[ local, /usr/lib/calamares/modules, /usr/lib/x86_64-linux-gnu/calamares/modules ]`.
+    - Podmiana modułu usług: zastąpiono `services-systemd` modułem `services-openrc`.
+    - Branding: `foxoos`.
+  - `modules/services-openrc.conf`:
+    - `initdDir: "/etc/init.d"`, `runlevelsDir: "/etc/runlevels"`.
+    - Automatyczna rejestracja usług: `udev` (sysinit), `dbus`, `network-manager`, `rsyslog`, `elogind`, `lightdm` (default).
+  - `modules/finished.conf`:
+    - Komenda ponownego uruchomienia zmieniona na `shutdown -r now` (zastąpiono `systemctl -i reboot`).
+  - `modules/bootloader.conf`:
+    - Skonfigurowano instalator bootloadera pod GRUB 2 BIOS i UEFI z wpisem rozruchowym `FoxoOS`.
+  - `modules/packages.conf`:
+    - Zapewniono usunięcie pakietów środowiska live (`live-boot`, `live-config`, `live-config-sysvinit`, `live-tools`, `calamares`) po zakończeniu instalacji na dysku.
+  - `modules/welcome.conf`, `modules/machineid.conf`, `modules/fstab.conf`, `modules/unpackfs.conf`, `modules/users.conf`.
+- **Dedykowany branding FoxoOS dla Calamares (`branding/foxoos/`)**:
+  - `branding.desc`: pełna identyfikacja FoxoOS 1.0, wersja, odnośniki wsparcia, ciemny motyw spójny z tapetą systemową.
+  - `foxoos-logo.png`: logo FoxoOS w formacie RGBA (256x256) wygenerowane z pliku użytkownika `logosystemu.png`.
+  - `welcome.png`: ekran powitalny (457x300) z motywem tapety `wallpapermain.png` i zintegrowanym logo.
+  - `slide1.png`: slajd prezentacji (800x480) z kompozycją tapety i logo.
+  - `show.qml`: prezentacja slajdów w QML z polskim komunikatem powitalnym.
+- **Integracja ze środowiskiem graficznym i skróty pulpitu**:
+  - Utworzono wrapper launchera: `/usr/bin/calamares-install-foxoos` (wsparcie `xhost`, `pkexec` i `sudo`).
+  - Skrót aplikacji: `/usr/share/applications/install-foxoos.desktop` (ikona `install-foxoos.png`).
+  - Skrót na pulpicie Live użytkownika oraz w `/etc/skel/Desktop/install-foxoos.desktop`: `Zainstaluj FoxoOS`.
+  - Reguła PolicyKit: `/etc/polkit-1/rules.d/49-calamares.rules` zezwalająca na uruchomienie instalatora bez hasła w trybie Live.
+  - Skrót dodany bezpośrednio na bieżący pulpit użytkownika VM: `/home/foxos/Desktop/install-foxoos.desktop`.
+- **Nowy obraz ISO i weryfikacja automatyczna**:
+  - **Plik ISO**: `/home/foxos/foxoos/foxoos-1.0-amd64.iso`
+  - **Rozmiar**: 367 MB (383 801 344 B)
+  - **SHA-256**: `fcd6cdf55ab49078c4a251e60830db729c3210aba852e17812522bd2e2610e80`
+  - **Wynik testu automatycznego QEMU TCG (`tests/qemu-20261115-221949.log`)**:
+    - PID 1 is init (`sysvinit-core`): PASS
+    - `/proc/1/exe` is `/usr/sbin/init`: PASS
+    - os-release identifies FoxoOS (`PRETTY_NAME="FoxoOS"`, `NAME="FoxoOS"`): PASS
+    - os-release keeps Debian base ID (`ID=debian`): PASS
+    - `FOXOS_VERSION="1.0"` present: PASS
+    - Brak menedżera systemd (`NO_SYSTEMD_MANAGER`): PASS
+    - Usługi OpenRC działają (`network-manager`, `dbus`, `rsyslogd` running): PASS
+    - Adres sieciowy DHCP (`10.0.2.15/24` na `ens3`): PASS
+    - Rezolucja DNS (`deb.debian.org` -> `2a04:4e42:41::644`): PASS
+    - Ping ICMP (`1.1.1.1`): PASS (0% packet loss)
+    - Binarka Calamares obecna i wykonywalna (`CALAMARES_BIN_OK`): PASS
+    - Konfiguracja Calamares obecna (`CALAMARES_CONF_OK`): PASS
+    - Branding FoxoOS dla Calamares obecny (`CALAMARES_BRANDING_OK`): PASS
+    - Skrót pulpitu instalatora obecny (`CALAMARES_DESKTOP_OK`): PASS
+    - Czyste wyłączenie zasilania (`poweroff -f` -> `reboot: Power down`): PASS
+    - Wszystkie 15 asercji testowych: PASS

@@ -46,3 +46,11 @@ grub-efi-amd64-bin
 grub-efi-ia32-bin
 mtools
 dosfstools
+# FoxoOS GUI Installer (Calamares) and dependencies
+calamares
+calamares-settings-debian
+cryptsetup
+libkpmcore12
+polkitd
+pkexec
+

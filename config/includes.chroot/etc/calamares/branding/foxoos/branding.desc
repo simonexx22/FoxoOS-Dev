@@ -1,0 +1,39 @@
+---
+componentName:   foxoos
+welcomeStyleCalamares: true
+welcomeExpandingLogo: true
+windowExpanding: normal
+windowSize: 850px,600px
+windowPlacement: center
+
+strings:
+    productName:         FoxoOS
+    shortProductName:    FoxoOS
+    version:             1.0
+    shortVersion:        1.0
+    versionedName:       FoxoOS 1.0
+    shortVersionedName:  FoxoOS 1.0
+    bootloaderEntryName: FoxoOS
+    productUrl:          https://foxoos.local
+    supportUrl:          https://foxoos.local/support
+    knownIssuesUrl:      https://foxoos.local/bugs
+    releaseNotesUrl:     https://foxoos.local/release-notes
+    donateUrl:           https://foxoos.local
+
+sidebar: widget
+navigation: widget
+
+images:
+    productLogo:         "foxoos-logo.png"
+    productIcon:         "foxoos-logo.png"
+    productWelcome:      "welcome.png"
+
+slideshow:               "show.qml"
+
+style:
+   SidebarBackground:    "#1e222a"
+   SidebarText:          "#FFFFFF"
+   SidebarTextCurrent:   "#ffffff"
+   SidebarBackgroundCurrent: "#2d3540"
+
+slideshowAPI: 2
