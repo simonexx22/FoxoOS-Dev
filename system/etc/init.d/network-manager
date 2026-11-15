@@ -9,6 +9,8 @@ command="/usr/sbin/NetworkManager"
 command_args="--no-daemon"
 respawn_delay=5
 respawn_max=10
+output_log="/var/log/network-manager.log"
+error_log="/var/log/network-manager.err"
 
 depend() {
 	need dbus

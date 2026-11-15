@@ -71,6 +71,29 @@ udev pozostaje.
 - Branding: dpkg-divert na /etc/os-release i /etc/issue, zachować
   /etc/debian_version oraz ID_LIKE=debian.
 
-## 5. Testy
+## 5. Przygotowane pliki (przed transakcją)
+
+- `system/etc/init.d/network-manager` — usługa OpenRC dla NM (supervise-daemon,
+  need dbus, provide net, after networking).
+- `system/usr/local/sbin/foxoos-sysvinit-links` — reboot/poweroff -> halt,
+  telinit -> init.
+- `system/etc/apt/preferences.d/99-foxoos-no-systemd` — pin -1 dla managera.
+- `system/etc/{os-release,issue,motd}`, `system/etc/default/grub.d/99-foxoos.cfg`.
+- `scripts/10..50`, `scripts/90-net-fallback.sh`, `notes/rollback.md`.
+- Wszystkie skrypty przeszły `bash -n` / `sh -n`. Repo jest w gicie
+  (commit 78edf2d).
+
+## 6. Ustalenia o sesji i GDM
+
+- Terminal agenta to GNOME Terminal w sesji **Wayland** (`XDG_SESSION_TYPE=wayland`),
+  gnome-shell działa w `user@1000.service`, a gdm3 (PID 1582) jest w osobnym
+  `gdm.service` (KillMode=mixed). Prerm gdm3 robi `invoke-rc.d gdm3 stop`,
+  ale zatrzymuje tylko gdm3, nie sesję użytkownika.
+- Po reboocie nie będzie GDM/GNOME — zostanie text login na tty1.
+  Sesja agenta zginie przy reboocie; dalsza weryfikacja przez konsolę VM.
+- Etap 1 uruchamiam przez `systemd-run` (własny cgroup), żeby transakcja
+  dokończyła się nawet przy zamknięciu sesji graficznej.
+
+## 7. Testy
 
 (będą dopisywane po każdym etapie)
