@@ -310,3 +310,41 @@ udev pozostaje.
     - `rsyslogd is running.`
     - `lightdm is running.`
     - `elogind is running.`
+
+## 14. Usunięcie błędów Permission denied i czarnego ekranu w VirtualBoxie (2026-11-15 23:33)
+
+### Przyczyny problemów w VirtualBoxie
+1. **Wymuszanie właściciela root w SquashFS (`-all-root` bez `-pseudo-override`)**:
+   Flaga `-all-root` w poleceniu `mksquashfs` bez flagi `-pseudo-override` wymuszała właściciela `root:root` (UID 0, GID 0) na dosłownie każdym pliku i katalogu w systemie, ignorując plik pseudo-spec. W efekcie cały katalog domowy `/home/foxos` stał się własnością roota bez praw zapisu dla zwykłego użytkownika. Podczas logowania użytkownik `foxos` (UID 1000) nie mógł zapisać pliku autoryzacji sesji X11 (`/home/foxos/.Xauthority`), plików pamięci podręcznej (`.cache`) ani historii powłoki (`.bash_history`), rzucając błędy `Permission denied` i powodując natychmiastowe załamanie sesji graficznej LXQt.
+2. **Brak konta systemowego `lightdm` i katalogów stanu**:
+   W pliku `/etc/passwd` i `/etc/group` brakowało konta użytkownika `lightdm` (UID 111, GID 115) oraz `polkitd` i `colord`. Ponadto katalog stanu `/var/lib/lightdm` nie istniał, przez co menedżer LightDM nie mógł utworzyć autoryzacji serwera wyświetlania dla ekranu.
+3. **Konfiguracja LightDM**:
+   W Debianie LightDM domyślnie **nie** czyta katalogu `/etc/lightdm/lightdm.conf.d/` (czyta `/etc/lightdm/lightdm.conf` oraz `/usr/share/lightdm/lightdm.conf.d/`). Dodatkowo parametr `logind-check-graphical=true` blokował uruchomienie serwera wyświetlania przed zgłoszeniem gotowości graficznej przez udev/logind.
+4. **Brak konfiguracji PAM elogind**:
+   W `/etc/pam.d/common-session` brakowało wpisu `session optional pam_elogind.so`, przez co nie był tworzony katalog `$XDG_RUNTIME_DIR` (`/run/user/1000`).
+
+### Wdrożone rozwiązania
+1. **Pełna specyfikacja uprawnień i `-pseudo-override`**:
+   - Wygenerowano wpisy pseudo dla każdego pliku i podkatalogu w `/home/foxos` z UID 1000 i GID 1000 (`m <mode> 1000 1000`).
+   - Wprowadzono flagę `-pseudo-override` w poleceniu `mksquashfs`.
+   - Poprawiono wpisy modyfikujące istniejące katalogi systemowe (`m` zamiast `d` dla `/var/lib/lightdm`, `/var/log/lightdm`, `/var/cache/lightdm`).
+2. **Konta systemowe i grupy**:
+   - Zintegrowano użytkowników systemowych: `lightdm:x:111:115`, `polkitd:x:987:987`, `colord:x:109:113`, `rtkit:x:108:112`, `avahi:x:102:107`, `messagebus:x:990:990`.
+   - Dodano użytkownika `foxos` do wszystkich niezbędnych grup: `sudo`, `autologin`, `video`, `render`, `audio`, `input`, `plugdev`, `netdev`, `dialout`, `users`.
+3. **Usługa wczesnego rozruchu `/etc/init.d/foxoos-live-prepare`**:
+   - Zarejestrowana w poziomie `sysinit` OpenRC.
+   - Dynamicznie przed uruchomieniem jakichkolwiek demonów zapewnia poprawność uprawnień na warstwie overlay: `/home/foxos` (1000:1000), `/run/user/1000` (1000:1000, 0700), `/tmp` (1777), `/var/lib/lightdm` (111:115, 0750), `/var/log/lightdm` (0:115, 0711) oraz weryfikuje `/etc/X11/default-display-manager`.
+4. **Konfiguracja LightDM i X11**:
+   - Skonfigurowano bezpośrednio `/etc/lightdm/lightdm.conf` oraz `/usr/share/lightdm/lightdm.conf.d/80-foxoos-live.conf`: `logind-check-graphical=false`, `autologin-user=foxos`, `user-session=lxqt`, `greeter-session=lightdm-gtk-greeter`.
+   - Utworzono dowiązanie `/usr/share/xgreeters/lightdm-greeter.desktop -> lightdm-gtk-greeter.desktop`.
+   - Zaktualizowano `/etc/pam.d/common-session` o moduł `pam_elogind.so`.
+
+### Weryfikacja
+- **Obraz ISO**: `/home/foxos/foxoos/foxoos-1.0-amd64.iso`
+- **SHA-256**: `333c10442501a10e0868de0754bd0a22fb57d54ac0f06cd8a2c61c1b4d4a72de`
+- **Test rozruchu (`tests/qemu-20261115-232829.log`)**:
+  - `WRITE_HOME_OK`: zapis do `/home/foxos` bez błędów uprawnień.
+  - `WRITE_TMP_OK`: zapis do `/tmp` bez błędów uprawnień.
+  - Uprawnienia zweryfikowane: `/home/foxos` (1000:1000, 0755), `/tmp` (0:0, 1777), `/var/lib/lightdm` (111:115, 0750).
+  - Aktywny proces Xorg na tty7: `/usr/lib/xorg/Xorg :0 -seat seat0 -auth /run/lightdm/root/:0 -nolisten tcp vt7 -novtswitch`.
+  - Wszystkie asercje: PASS (0 błędów Permission denied).
