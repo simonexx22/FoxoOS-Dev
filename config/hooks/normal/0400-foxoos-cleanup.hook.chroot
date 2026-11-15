@@ -1,0 +1,22 @@
+#!/bin/sh
+# FoxoOS: remove build-host state from the live image.
+set -eu
+
+rm -f /etc/ssh/ssh_host_* 2>/dev/null || true
+rm -f /etc/udev/rules.d/70-persistent-net.rules 2>/dev/null || true
+rm -rf /var/cache/apt/archives/*.deb 2>/dev/null || true
+rm -rf /var/lib/live/config/* 2>/dev/null || true
+rm -rf /var/log/live/* 2>/dev/null || true
+rm -f /var/log/*.log 2>/dev/null || true
+rm -f /root/.bash_history /home/foxos/.bash_history 2>/dev/null || true
+
+# A live image must get a fresh machine id from dbus/systemd-tmpfiles.
+rm -f /etc/machine-id
+: > /etc/machine-id
+rm -f /var/lib/dbus/machine-id 2>/dev/null || true
+
+# Do not ship the build host's random seed.
+rm -f /var/lib/systemd/random-seed 2>/dev/null || true
+
+# Recreate a clean syslog target; rsyslog will append to it at boot.
+: > /var/log/syslog 2>/dev/null || true

@@ -39,3 +39,25 @@ packagekit, polkitd, pkexec, libpam-systemd, ModemManager, nm-connection-editor.
 `/etc/apt/preferences.d/99-foxoos-no-systemd` blokuje powrot:
 systemd, systemd-sysv, systemd-timesyncd, libpam-systemd, libnss-systemd
 (Pin-Priority: -1). Biblioteki i udev NIE sa pinowane.
+
+## Pakiety tylko do budowy ISO (chroot)
+
+Live-build sprawdza w chroot narzędzia potrzebne w etapie `binary`. Przy
+`--apt-indices false` listy APT są usuwane po etapie `chroot`, więc narzędzia
+muszą być już zainstalowane:
+
+    squashfs-tools     # mksquashfs w chroot
+    xorriso            # budowa ISO
+    isolinux           # /usr/lib/ISOLINUX/isohdpfx.bin (hybrydowy MBR)
+    grub-common        # grub-mkimage
+    grub-pc-bin        # boot_hybrid.img, moduły i386-pc
+    librsvg2-bin       # rsvg-convert dla splash.svg
+    fonts-dejavu-core  # font do splash.svg
+
+Nie trafiają do działającego systemu jako usługi — to narzędzia obrazu.
+
+## systemd-standalone-tmpfiles
+
+W dev VM dodany, bo `udev`/pakiety używają `systemd-tmpfiles` do tworzenia
+`/run` i katalogów tymczasowych. W ISO również jest w liście pakietów.
+Nie jest to menedżer systemd.

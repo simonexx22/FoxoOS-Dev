@@ -1,0 +1,5 @@
+# FoxoOS: never pull the systemd init/manager into the live image.
+# libsystemd0, libsystemd-shared, udev and the standalone helpers are allowed.
+Package: systemd systemd-sysv systemd-timesyncd libpam-systemd libnss-systemd
+Pin: release *
+Pin-Priority: -1

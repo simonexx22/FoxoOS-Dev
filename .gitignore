@@ -1,0 +1,33 @@
+# live-build generated state
+/.lock
+/build.log
+/build.exit
+/build-run1.log
+/binary.modified_timestamps
+/*.files
+/*.contents
+/chroot.packages.*
+/iso_root/
+/.build/
+/binary/
+/cache/
+/chroot/
+/config/binary
+/config/bootstrap
+/config/chroot
+/config/common
+/config/source
+/config/hooks/normal/[1-9][0-9][0-9][0-9]-*.hook.chroot
+/config/hooks/live/*.hook.chroot
+
+# build outputs
+/*.iso
+/*.iso.sha256
+/*.packages
+/foxoos-*.iso
+/foxoos-*.iso.sha256
+/foxoos-*.packages
+
+# local test artifacts
+/tests/*.log
+/tests/*.png

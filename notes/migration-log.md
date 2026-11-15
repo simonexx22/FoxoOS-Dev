@@ -97,3 +97,43 @@ udev pozostaje.
 ## 7. Testy
 
 (będą dopisywane po każdym etapie)
+
+## 8. Wdrożenie po reboocie (2026-11-15)
+
+- PID 1: `init [2]`, `/proc/1/exe` -> `/usr/sbin/init` (sysvinit-core).
+- OpenRC wystartował sysinit/default; NetworkManager, dbus, rsyslog działają.
+- LXQt + lightdm + elogind: sesja `foxos` aktywna, `loginctl` pokazuje seat0.
+- Usunięto resztki: `systemd`, `systemd-timesyncd`, `libnss-systemd`
+  (purge); zainstalowano `systemd-standalone-tmpfiles`.
+- Pin APT rozszerzony o `libpam-systemd` i `libnss-systemd`.
+- Branding: `/etc/os-release` (ID=debian, NAME=FoxoOS, FOXOS_VERSION=1.0),
+  `/etc/issue`, `/etc/issue.net`, `/etc/motd`, `/etc/lsb-release`;
+  dywersje `*.debian`; GRUB „FoxoOS 1.0 GNU/Linux”.
+- `lsb_release`: Description FoxoOS 1.0, Release 13, Codename trixie.
+- `dpkg -C` czyste; `apt-get -s upgrade` bez zmian.
+
+## 9. ISO live-build (2026-11-15)
+
+- Projekt: `/home/foxos/foxoos` (git). Konfiguracja w `auto/config`.
+- Baza: debootstrap `--variant=minbase`, live-config-sysvinit.
+- Pakiety: sysvinit-core, openrc, NetworkManager, dbus, rsyslog, sudo,
+  live-boot/live-config, bez systemd.
+- Hooki: branding, user foxos/live, rc-update, cleanup, verify.
+- Test: QEMU TCG po serialu (`make test`); wynik dopisany niżej po budowie.
+
+## 10. Wyniki budowy i testu ISO (2026-11-15)
+
+- **Plik ISO**: `/home/foxos/foxoos/foxoos-1.0-amd64.iso`
+- **Rozmiar**: 310 MB (324 976 640 B)
+- **SHA-256**: `094b662c5678d8a42f620005bb989bd60889f7c1f46cb86d2b7cdc770b436908`
+- **Manifest**: brak `systemd`, brak `systemd-sysv`, brak `systemd-timesyncd`, brak `libpam-systemd`, brak `libnss-systemd`. Zachowano: `libsystemd0`, `libsystemd-shared`, `udev`, `systemd-standalone-sysusers`, `systemd-standalone-tmpfiles`.
+- **Wynik testu automatycznego QEMU (TCG serial)**:
+  - PID 1 is init (`sysvinit-core` / `/usr/sbin/init`): PASS
+  - os-release identifies FoxoOS (`PRETTY_NAME="FoxoOS 1.0 (Debian 13 trixie base)"`, `NAME="FoxoOS"`, `ID=debian`, `FOXOS_VERSION="1.0"`): PASS
+  - no systemd/systemd-sysv manager packages: PASS (`NO_SYSTEMD_MANAGER`)
+  - services started by OpenRC (`network-manager`, `dbus`, `rsyslogd` running): PASS
+  - DHCP address from QEMU network (`10.0.2.15/24` on `ens3` via NetworkManager): PASS
+  - DNS resolution (`deb.debian.org`): PASS
+  - ICMP ping (`1.1.1.1`): PASS
+  - Czyste zamknięcie systemu (`poweroff -f` -> `reboot: Power down`): PASS
+  - Wszystkie 11 kontroli automatycznych: PASS (`tests/qemu-20261115-210331.log`).

@@ -1,0 +1,78 @@
+#!/usr/bin/expect -f
+# FoxoOS ISO smoke test over the serial console.
+# Usage: expect -f qemu-login.expect /path/to/foxoos-1.0-amd64.iso
+
+set timeout 1200
+set iso [lindex $argv 0]
+if {$iso eq ""} {
+    puts stderr "usage: qemu-login.expect <iso>"
+    exit 2
+}
+
+log_user 1
+
+spawn qemu-system-x86_64 \
+    -name FoxoOS-test \
+    -machine pc,accel=tcg \
+    -m 2048 -smp 2 \
+    -cdrom $iso \
+    -boot d \
+    -nic user,model=e1000 \
+    -display none -monitor none -serial stdio \
+    -no-reboot
+
+expect {
+    -re "foxoos login:" {}
+    timeout {
+        puts stderr "TIMEOUT: no 'foxoos login:' prompt on ttyS0"
+        exit 1
+    }
+    eof {
+        puts stderr "EOF: QEMU exited before the login prompt"
+        exit 1
+    }
+}
+
+send "foxos\r"
+expect {
+    -re "Password:" {}
+    timeout {
+        puts stderr "TIMEOUT: no password prompt"
+        exit 1
+    }
+}
+send "live\r"
+
+expect {
+    -re {[$#] $} {}
+    timeout {
+        puts stderr "TIMEOUT: no shell prompt after login"
+        exit 1
+    }
+}
+
+send "echo FOXOS_TEST'_'START\r"
+expect "FOXOS_TEST_START"
+
+# NetworkManager needs a moment for DHCP after the login prompt appears.
+send "for i in \$(seq 1 30); do ip -4 -o addr show 2>/dev/null | grep -q '10\\.0\\.2\\.15' && break; sleep 2; done; echo NETWAIT'_'DONE\r"
+expect "NETWAIT_DONE"
+
+send "echo '== PID1 =='; echo PID1'_'COMM=\$(cat /proc/1/comm); echo PID1'_'EXE=\$(sudo readlink -f /proc/1/exe); echo '== OS =='; grep -E '^(PRETTY_NAME|NAME|ID|FOXOS_VERSION)=' /etc/os-release; echo '== SERVICES =='; sudo rc-service network-manager status; sudo rc-service dbus status; sudo rc-service rsyslog status; echo '== SYSTEMD =='; (dpkg -l | grep -E '^ii +(systemd|systemd-sysv|systemd-timesyncd|libnss-systemd|libpam-systemd) ' || echo NO_SYSTEMD_MANAGER); echo '== NET =='; ip -br a; ip r; cat /etc/resolv.conf; echo '== DNS =='; getent hosts deb.debian.org; echo '== PING =='; sudo ping -c1 -W5 1.1.1.1; echo FOXOS_DIAG'_'END\r"
+
+expect {
+    "FOXOS_DIAG_END" {}
+    timeout {
+        puts stderr "TIMEOUT: diagnostics did not finish"
+        exit 1
+    }
+}
+
+send "sudo poweroff -f || sudo halt -f -p\r"
+set timeout 15
+expect {
+    eof {}
+    timeout {
+        puts "Poweroff completed (system halted)"
+    }
+}

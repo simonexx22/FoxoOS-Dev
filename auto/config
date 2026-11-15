@@ -1,0 +1,46 @@
+#!/bin/sh
+# FoxoOS live-build configuration.
+# Called automatically by `lb build` when the config stage is missing.
+# Keep all build options here so the ISO is reproducible from this repository.
+
+set -eu
+cd "$(dirname "$0")/.."
+
+# Deterministic metadata. This is only the build timestamp; package versions
+# still come from the Debian mirror at build time.
+if [ -z "${SOURCE_DATE_EPOCH:-}" ]; then
+	SOURCE_DATE_EPOCH=1794700800   # 2026-11-15 00:00:00 UTC
+	export SOURCE_DATE_EPOCH
+fi
+
+lb config noauto \
+	--mode debian \
+	--distribution trixie \
+	--parent-distribution trixie \
+	--archive-areas main \
+	--parent-archive-areas main \
+	--architecture amd64 \
+	--binary-image iso-hybrid \
+	--bootloaders grub-pc \
+	--debian-installer none \
+	--memtest none \
+	--initsystem sysvinit \
+	--initramfs live-boot \
+	--linux-flavours amd64 \
+	--linux-packages linux-image \
+	--chroot-filesystem squashfs \
+	--chroot-squashfs-compression-type xz \
+	--apt-recommends false \
+	--apt-indices false \
+	--firmware-binary false \
+	--firmware-chroot false \
+	--debootstrap-options "--variant=minbase" \
+	--debconf-frontend noninteractive \
+	--debconf-priority critical \
+	--iso-application "FoxoOS 1.0" \
+	--iso-preparer "FoxoOS build" \
+	--iso-publisher "FoxoOS" \
+	--iso-volume "FOXOOS" \
+	--image-name "foxoos-1.0" \
+	--bootappend-live "boot=live components quiet live-config.noautologin live-config.hostname=foxoos live-config.username=foxos live-config.locales=pl_PL.UTF-8 live-config.timezone=Europe/Warsaw live-config.keyboard-layouts=pl live-config.keyboard-model=pc105 console=ttyS0,115200 console=tty0" \
+	"$@"

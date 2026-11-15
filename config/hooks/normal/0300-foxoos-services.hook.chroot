@@ -1,0 +1,65 @@
+#!/bin/sh
+# FoxoOS: OpenRC runlevels and a small post-boot diagnostic report.
+set -eu
+
+# Persistent OpenRC log, as in the dev VM.
+if [ -f /etc/rc.conf ]; then
+	sed -i 's/^#\?rc_logger=.*/rc_logger="YES"/' /etc/rc.conf
+fi
+
+add_service() {
+	_svc="$1"
+	_rl="$2"
+	[ -x "/etc/init.d/${_svc}" ] || return 0
+	rc-update add "${_svc}" "${_rl}" >/dev/null 2>&1 || true
+	if [ ! -L "/etc/runlevels/${_rl}/${_svc}" ]; then
+		mkdir -p "/etc/runlevels/${_rl}"
+		ln -sfn "/etc/init.d/${_svc}" "/etc/runlevels/${_rl}/${_svc}"
+	fi
+}
+
+# Core sysinit services. Packages normally register these through update-rc.d;
+# listing them explicitly keeps the image reproducible if install order changes.
+for _svc in \
+	udev kmod hostname.sh mountkernfs.sh mountdevsubfs.sh \
+	checkroot.sh checkroot-bootclean.sh checkfs.sh mountall.sh \
+	mountall-bootclean.sh mountnfs.sh mountnfs-bootclean.sh \
+	bootmisc.sh hwclock.sh keyboard-setup.sh procps networking cgroups
+do
+	add_service "${_svc}" sysinit
+done
+
+# Late userspace: live-config creates the live user before login, then the
+# normal NetworkManager/dbus/logging stack starts.
+add_service live-config sysinit
+for _svc in dbus network-manager rsyslog bootlogs rmnologin sudo console-setup.sh; do
+	add_service "${_svc}" default
+done
+
+# Boot report for support/debugging (also useful in the QEMU test).
+cat > /etc/rc.local <<'EOF'
+#!/bin/sh
+# FoxoOS live: write a short boot report, then exit successfully.
+mkdir -p /var/log
+(
+	sleep 3
+	date -Is
+	echo "PID1: $(cat /proc/1/comm 2>/dev/null)"
+	rc-status -a 2>&1
+	ip -br a 2>&1
+	cat /etc/resolv.conf 2>&1
+) > /var/log/foxoos-boot.log 2>&1
+exit 0
+EOF
+chmod 0755 /etc/rc.local
+add_service rc.local default
+
+# Refresh OpenRC's dependency cache; harmless if the cache is regenerated at boot.
+rc-update -u >/dev/null 2>&1 || true
+
+# Sanity: the live-config init script must be in a runlevel, otherwise the
+# live user/autologin components never run.
+if [ -x /etc/init.d/live-config ] && [ ! -L /etc/runlevels/sysinit/live-config ]; then
+	echo "ERROR: live-config is not in the sysinit runlevel" >&2
+	exit 1
+fi

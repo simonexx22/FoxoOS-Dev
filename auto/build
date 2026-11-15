@@ -1,0 +1,5 @@
+#!/bin/sh
+# FoxoOS: `lb build` redirects here. Keep the real build non-recursive.
+set -eu
+cd "$(dirname "$0")/.."
+exec lb build noauto "$@"

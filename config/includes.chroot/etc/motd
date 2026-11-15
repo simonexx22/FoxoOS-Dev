@@ -1,0 +1,19 @@
+  ______               ____  _____
+ |  ____|             / __ \/ ____|
+ | |__ _____  ___   | |  | | (___
+ |  __/ _ \ \/ / |  | |  | |\___ \
+ | | | (_) >  <| |__| |__| |____) |
+ |_|  \___/_/\_\\____/\____/|_____/
+
+Welcome to FoxoOS 1.0 Live
+Debian GNU/Linux 13 (trixie) base system
+
+FoxoOS uses sysvinit-core as PID 1 and OpenRC for services.
+The systemd service manager is not installed.
+
+  rc-status                 show OpenRC services
+  rc-service <name> status  show one service
+  ip -br a                  network addresses
+  cat /etc/os-release       OS identification
+
+Live user: foxos / live (sudo without password)

@@ -1,0 +1,22 @@
+#!/bin/sh
+# FoxoOS: predictable live user for text login / sudo.
+set -eu
+
+if ! getent passwd foxos >/dev/null 2>&1; then
+	adduser --disabled-password --gecos "FoxoOS user" foxos
+fi
+
+# Documented live password. This is a demo live image, not a server.
+echo 'foxos:live' | chpasswd
+adduser foxos sudo >/dev/null 2>&1 || true
+
+install -d -m 0755 /etc/sudoers.d
+printf '%s\n' 'foxos ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/foxos
+chmod 0440 /etc/sudoers.d/foxos
+visudo -cf /etc/sudoers.d/foxos >/dev/null
+
+# No root console login; sudo is the supported path.
+passwd -l root >/dev/null 2>&1 || true
+
+# live-config expects these state directories.
+install -d -m 0755 /var/lib/live/config /var/log/live

@@ -1,0 +1,3 @@
+# FoxoOS live: only loopback here; NetworkManager handles the rest.
+auto lo
+iface lo inet loopback

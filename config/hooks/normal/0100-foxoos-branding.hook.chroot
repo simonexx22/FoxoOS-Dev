@@ -1,0 +1,82 @@
+#!/bin/sh
+# FoxoOS: system identification, console greeting, serial console.
+set -eu
+
+# Keep the live-build metadata (IMAGE_ID/BUILD_ID) while changing the name.
+_build_id="$(sed -n 's/^BUILD_ID=//p' /etc/os-release 2>/dev/null | head -n1 || true)"
+_image_id="$(sed -n 's/^IMAGE_ID=//p' /etc/os-release 2>/dev/null | head -n1 || true)"
+_debian_version="$(cat /etc/debian_version 2>/dev/null || echo unknown)"
+
+cat > /etc/os-release <<EOF
+PRETTY_NAME="FoxoOS 1.0 (Debian 13 trixie base)"
+NAME="FoxoOS"
+VERSION_ID="13"
+VERSION="13 (trixie)"
+VERSION_CODENAME=trixie
+ID=debian
+ID_LIKE=debian
+HOME_URL="https://foxoos.local/"
+SUPPORT_URL="https://foxoos.local/support"
+BUG_REPORT_URL="https://foxoos.local/bugs"
+DEBIAN_CODENAME=trixie
+DEBIAN_VERSION_FULL="${_debian_version}"
+FOXOS_VERSION="1.0"
+FOXOS_CODENAME="trixie"
+FOXOS_BASE="Debian GNU/Linux 13"
+FOXOS_BUILD="${_build_id:-unknown}"
+IMAGE_ID="${_image_id:-live}"
+BUILD_ID="${_build_id:-unknown}"
+EOF
+
+# Keep Debian's os-release available for tools that want the pristine copy.
+if [ -e /usr/lib/os-release ]; then
+	cp -f /usr/lib/os-release /usr/lib/os-release.debian 2>/dev/null || true
+fi
+
+# Branding must survive a future base-files upgrade when FoxoOS is installed.
+for _file in /etc/issue /etc/issue.net; do
+	if ! dpkg-divert --list "$_file" 2>/dev/null | grep -q "diversion of $_file "; then
+		dpkg-divert --local --no-rename --add --divert "${_file}.debian" "$_file" >/dev/null
+	fi
+	chmod 0644 "$_file"
+done
+
+# Console greeting files are provided by config/includes.chroot; make sure
+# they exist even if a future refactor moves them into this hook.
+if [ ! -s /etc/issue ]; then
+	printf 'FoxoOS 1.0 (Debian 13 trixie base) \\n \\l\n\n' > /etc/issue
+fi
+if [ ! -s /etc/motd ]; then
+	printf 'Welcome to FoxoOS 1.0 Live\n' > /etc/motd
+fi
+chmod 0644 /etc/issue /etc/issue.net /etc/motd /etc/lsb-release 2>/dev/null || true
+
+# Hostname and timezone (live-config can override both from the kernel cmdline).
+echo foxoos > /etc/hostname
+cat > /etc/hosts <<'EOF'
+127.0.0.1	localhost
+127.0.1.1	foxoos
+
+::1	localhost ip6-localhost ip6-loopback
+fe00::0	ip6-localnet
+ff00::0	ip6-mcastprefix
+ff02::1	ip6-allnodes
+ff02::2	ip6-allrouters
+EOF
+
+echo Europe/Warsaw > /etc/timezone
+ln -sf /usr/share/zoneinfo/Europe/Warsaw /etc/localtime
+
+# A serial getty makes the same ISO testable under QEMU -nographic and in
+# VirtualBox with a serial port, without changing the normal tty1 login.
+if [ -f /etc/inittab ] && ! grep -q '^T0:2345:respawn:/sbin/getty -L ttyS0' /etc/inittab; then
+	sed -i '/^#T0:/d' /etc/inittab
+	cat >> /etc/inittab <<'EOF'
+
+# FoxoOS: serial console (QEMU/headless testing)
+T0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100
+EOF
+fi
+
+# Make the root filesystem's identity visible in logs.
+printf 'FoxoOS 1.0 live image (Debian 13 trixie base)\n' > /etc/foxoos-release

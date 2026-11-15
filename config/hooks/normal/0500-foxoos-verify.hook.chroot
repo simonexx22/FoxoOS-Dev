@@ -1,0 +1,69 @@
+#!/bin/sh
+# FoxoOS: fail the build if the systemd manager or a critical service crept in.
+set -eu
+
+_fail=0
+
+for _pkg in systemd systemd-sysv systemd-timesyncd libnss-systemd libpam-systemd; do
+	if dpkg-query -W -f='${db:Status-Status}\n' "${_pkg}" 2>/dev/null | grep -qx installed; then
+		echo "ERROR: forbidden package installed: ${_pkg}" >&2
+		_fail=1
+	fi
+done
+
+for _pkg in sysvinit-core openrc live-config live-config-sysvinit live-boot network-manager dbus udev; do
+	if ! dpkg-query -W -f='${db:Status-Status}\n' "${_pkg}" 2>/dev/null | grep -qx installed; then
+		echo "ERROR: required package missing: ${_pkg}" >&2
+		_fail=1
+	fi
+done
+
+if [ ! -x /sbin/init ]; then
+	echo "ERROR: /sbin/init is missing or not executable" >&2
+	_fail=1
+elif ! dpkg-query -S /usr/sbin/init 2>/dev/null | grep -q '^sysvinit-core:'; then
+	echo "ERROR: /usr/sbin/init is not owned by sysvinit-core" >&2
+	_fail=1
+fi
+
+if command -v systemctl >/dev/null 2>&1; then
+	echo "ERROR: systemctl is present in the image" >&2
+	_fail=1
+fi
+
+for _link in \
+	/etc/runlevels/sysinit/live-config \
+	/etc/runlevels/sysinit/udev \
+	/etc/runlevels/default/dbus \
+	/etc/runlevels/default/network-manager
+do
+	if [ ! -L "${_link}" ]; then
+		echo "ERROR: missing OpenRC runlevel link: ${_link}" >&2
+		_fail=1
+	fi
+done
+
+if ! grep -q '^NAME="FoxoOS"$' /etc/os-release; then
+	echo "ERROR: /etc/os-release does not identify FoxoOS" >&2
+	_fail=1
+fi
+if ! grep -q '^ID=debian$' /etc/os-release; then
+	echo "ERROR: Debian base identification (ID=debian) is missing" >&2
+	_fail=1
+fi
+if ! grep -q '^FOXOS_VERSION="1.0"$' /etc/os-release; then
+	echo "ERROR: FOXOS_VERSION is missing" >&2
+	_fail=1
+fi
+
+if command -v dpkg >/dev/null 2>&1 && ! dpkg --audit >/dev/null 2>&1; then
+	echo "ERROR: dpkg --audit reported problems" >&2
+	_fail=1
+fi
+
+if [ "${_fail}" -ne 0 ]; then
+	echo "FoxoOS live image verification FAILED" >&2
+	exit 1
+fi
+
+echo "FoxoOS live image verification OK: sysvinit-core + OpenRC, no systemd manager."

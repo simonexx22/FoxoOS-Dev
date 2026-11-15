@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#16233b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0883e"/>
+      <stop offset="1" stop-color="#6ea8fe"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#bg)"/>
+
+  <!-- subtle rings -->
+  <circle cx="690" cy="110" r="190" fill="none" stroke="#6ea8fe" stroke-opacity="0.18" stroke-width="2"/>
+  <circle cx="690" cy="110" r="140" fill="none" stroke="#f0883e" stroke-opacity="0.16" stroke-width="2"/>
+  <circle cx="690" cy="110" r="90" fill="none" stroke="#6ea8fe" stroke-opacity="0.14" stroke-width="2"/>
+
+  <!-- abstract fox ears / silhouette -->
+  <g fill="url(#accent)" opacity="0.92">
+    <path d="M560 330 L600 220 L646 318 Z"/>
+    <path d="M674 318 L720 220 L760 330 Z"/>
+    <path d="M540 350 Q660 500 780 350 L748 300 Q660 410 572 300 Z"/>
+  </g>
+
+  <text x="76" y="300" font-family="DejaVu Sans" font-size="104" font-weight="bold" fill="#ffffff">FoxoOS</text>
+  <text x="80" y="360" font-family="DejaVu Sans" font-size="34" fill="#8ab4f8">1.0 Live &#183; Debian 13 base</text>
+  <text x="80" y="470" font-family="DejaVu Sans" font-size="22" fill="#c7d0dd">sysvinit-core (PID 1) + OpenRC</text>
+  <text x="80" y="510" font-family="DejaVu Sans" font-size="18" fill="#8b97a8">no systemd manager &#183; Debian repositories only</text>
+
+  <rect x="80" y="545" width="640" height="2" fill="#6ea8fe" fill-opacity="0.35"/>
+  <text x="80" y="575" font-family="DejaVu Sans" font-size="16" fill="#8b97a8">FoxoOS live image</text>
+</svg>

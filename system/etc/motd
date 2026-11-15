@@ -1,8 +1,19 @@
-Welcome to FoxoOS 1.0 (Trixie)
-Debian GNU/Linux 13 base | init: sysvinit-core | services: OpenRC
+  ______               ____  _____
+ |  ____|             / __ \/ ____|
+ | |__ _____  ___   | |  | | (___
+ |  __/ _ \ \/ / |  | |  | |\___ \
+ | | | (_) >  <| |__| |__| |____) |
+ |_|  \___/_/\_\\____/\____/|_____/
 
-  * package management: apt / dpkg (Debian repositories)
-  * service management: rc-service, rc-update, rc-status
-  * reboot / shutdown:   reboot, poweroff, shutdown -r now / -h now
+Welcome to FoxoOS 1.0
+Debian GNU/Linux 13 (trixie) base system
 
-Debian compatibility is kept via /etc/debian_version and ID_LIKE=debian.
+FoxoOS uses sysvinit-core as PID 1 and OpenRC for services.
+The systemd service manager is not installed.
+
+  rc-status                 show OpenRC services
+  rc-service <name> status  show one service
+  ip -br a                  network addresses
+  cat /etc/os-release       OS identification
+
+Documentation and build scripts: /usr/local/share/foxoos/
