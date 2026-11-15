@@ -348,3 +348,60 @@ udev pozostaje.
   - Uprawnienia zweryfikowane: `/home/foxos` (1000:1000, 0755), `/tmp` (0:0, 1777), `/var/lib/lightdm` (111:115, 0750).
   - Aktywny proces Xorg na tty7: `/usr/lib/xorg/Xorg :0 -seat seat0 -auth /run/lightdm/root/:0 -nolisten tcp vt7 -novtswitch`.
   - Wszystkie asercje: PASS (0 błędów Permission denied).
+
+## 15. Naprawa uruchamiania instalatora Calamares oraz brakujących ikon systemowych (2026-11-16 00:34)
+
+### Przyczyny problemów
+1. **Brak reakcji po kliknięciu na skrót „Zainstaluj FoxoOS” na pulpicie**:
+   - **Brakujące biblioteki współdzielone Calamares**: Binarka Calamares w Debianie 13 (*trixie*) oraz jej moduły dynamiczne wymagają:
+     - `libpython3.13.so.1.0` (pakiet `libpython3.13`),
+     - `libparted.so.2` (pakiet `libparted2t64` i `parted`),
+     - `libpwquality.so.1` (pakiet `libpwquality1` i `libpwquality-common`),
+     - `libproxy.so.1` (pakiet `libproxy1v5` i `libduktape207` wymagane tranzytywnie przez `libQt6Network`).
+     Próba uruchomienia Calamares kończyła się błędem dynamic linkera (`cannot open shared object file: No such file or directory`) z kodem wyjścia 127.
+   - **Błędny skrypt startowy launchera (`calamares-install-foxoos`)**: Poprzedni skrypt wywoływał `pkexec calamares ""` – binarka `/usr/bin/pkexec` w SquashFS nie posiadała bitu SUID (`0755` zamiast `4755`), powodując natychmiastowe odrzucenie z komunikatem `pkexec must be setuid root`. Ponadto parametr `""` (pusty string) powodował błąd parsowania argumentów Calamares, a sudo w sesji live czyściło zmienne środowiskowe `DISPLAY` i `XAUTHORITY`.
+   - **Uszkodzone dowiązanie QML**: Dowiązanie `/etc/calamares/qml` wskazywało na bezwzględną ścieżkę stagingową `/tmp/sq_unpack/usr/share/calamares/qml`, która nie istniała w uruchomionym systemie live.
+2. **Brakujące ikony w środowisku graficznym (LXQt / pulpit / menu / LightDM)**:
+   - Domyślny motyw ikon LXQt (`/usr/share/lxqt/lxqt.conf`) to `breeze`, a LightDM GTK greeter to `Papirus-Dark`. W obrazie brakowało kompletnych pakietów motywów `kf6-breeze-icon-theme` oraz `papirus-icon-theme`.
+   - **Kluczowy brak wtyczki Qt6 SVG**: Motywy Breeze i Papirus składają się w przeważającej większości z plików wektorowych SVG. Aplikacje oparte na Qt6 (panel LXQt, menedżer plików PCManFM-Qt, instalator Calamares) wymagają wtyczki silnika ikon `qt6-svg-plugins` (`/usr/lib/x86_64-linux-gnu/qt6/plugins/iconengines/libqsvgicon.so` oraz `imageformats/libqsvg.so`). Bez tego pakietu Qt6 nie jest w stanie wyrenderować żadnej ikony SVG, wyświetlając puste miejsca zamiast ikon.
+   - W pamięci podręcznej modułów GdkPixbuf (`loaders.cache`) brakowało wpisu dla modułu SVG `libpixbufloader_svg.so`.
+   - Ikona skrótu instalatora `install-foxoos` znajdowała się tylko w rozdzielczości 256x256, podczas gdy ikony pulpitu LXQt domyślnie używają rozmiaru 48x48.
+
+### Wdrożone rozwiązania
+1. **Instalacja kompletnych bibliotek i pakietów Calamares**:
+   - Zainstalowano i zintegrowano w SquashFS: `libpython3.13`, `libparted2t64`, `parted`, `libpwquality1`, `libpwquality-common`, `libcrack2`, `dmidecode`, `cracklib-runtime`, `wamerican`, `libproxy1v5`, `libduktape207`.
+   - Zweryfikowano rekurencyjnie za pomocą skryptu ELF analizatora brak jakichkolwiek brakujących bibliotek we wszystkich 347 plikach binarnych i modułach Calamares.
+2. **Nowy bezpieczny launcher `/usr/bin/calamares-install-foxoos`**:
+   - Automatyczny eksport zmiennych środowiskowych `DISPLAY` oraz `XAUTHORITY`.
+   - Zezwolenie lokalnemu użytkownikowi root na dostęp do serwera X (`xhost +local:root`).
+   - Uruchamianie z uprawnieniami root przez `sudo -E` (w sesji live użytkownik `foxos` ma uprawnienia `NOPASSWD: ALL` w `/etc/sudoers.d/foxos`).
+   - Zachowanie zmiennych wyświetlania w `/etc/sudoers.d/foxos`:
+     `Defaults:foxos env_keep += "DISPLAY XAUTHORITY WAYLAND_DISPLAY QT_QPA_PLATFORMTHEME"`.
+   - Prawidłowe przekazywanie parametrów `"$@"` (brak pustego stringa `""`).
+   - Dodatkowe zabezpieczenie w postaci uprawnień SUID (`4755 0 0`) dla `usr/bin/pkexec` oraz `usr/lib/polkit-1/polkit-agent-helper-1` w `pseudo.txt`.
+3. **Poprawa dowiązania QML**:
+   - Przekształcono `/etc/calamares/qml` w relatywne dowiązanie `../../usr/share/calamares/qml`, poprawne zarówno w stagingu, jak i w docelowym obrazie live.
+4. **Instalacja motywów ikon i silnika SVG**:
+   - Zainstalowano pakiety motywów `kf6-breeze-icon-theme` oraz `papirus-icon-theme`.
+   - Zainstalowano pakiet `qt6-svg-plugins` (dostarczający `libqsvgicon.so` dla Qt6) oraz `librsvg2-common`.
+   - Wygenerowano pamięci podręczne ikon `gtk-update-icon-cache` dla motywów: `hicolor`, `breeze`, `Papirus`, `Papirus-Dark` oraz zaktualizowano `loaders.cache` dla GdkPixbuf.
+   - Skopiowano ikonę `install-foxoos.png` do wszystkich standardowych rozmiarów: `16x16`, `32x32`, `48x48`, `64x64`, `128x128`, `256x256` w motywach hicolor, breeze i Papirus oraz do `/usr/share/pixmaps/`.
+5. **Aktualizacja manifestów i konfiguracji projektu**:
+   - Zaktualizowano `config/package-lists/foxoos.list.chroot`, `iso_root/live/filesystem.packages` oraz bazę `/var/lib/dpkg/status`.
+
+### Weryfikacja
+- **Nowy obraz ISO**: `/home/foxos/foxoos/foxoos-1.0-amd64.iso`
+- **Suma kontrolna SHA-256**: `89e960dd24e71d9cdd5ee4bfd64617b37a17f7239669c157bfb40ab5d668c3d7`
+- **Rozmiar ISO**: 626 MB
+- **Wynik testu automatycznego QEMU (`tests/qemu-20261116-002942.log`)**:
+  - `CALAMARES_BIN_OK`: obecny i wykonywalny.
+  - `CALAMARES_CONF_OK`: konfiguracja `/etc/calamares/settings.conf` poprawna.
+  - `CALAMARES_BRANDING_OK`: branding FoxoOS obecny.
+  - `CALAMARES_DESKTOP_OK`: skrót na pulpicie `/home/foxos/Desktop/install-foxoos.desktop` obecny i wykonywalny.
+  - `CALAMARES_LAUNCHER_OK`: launcher `/usr/bin/calamares-install-foxoos` obecny i poprawny.
+  - `BREEZE_ICONS_OK`: motyw Breeze w `/usr/share/icons/breeze` zainstalowany.
+  - `PAPIRUS_ICONS_OK`: motyw Papirus w `/usr/share/icons/Papirus` zainstalowany.
+  - `QT6_SVG_OK`: silnik `libqsvgicon.so` zainstalowany w Qt6 plugins.
+  - `CALAMARES_QML_LINK_OK`: symlink `/etc/calamares/qml` poprawny.
+  - `CALAMARES_VERSION_OK`: `calamares 3.3.14` wykonany przez bezhasłowe `sudo -n` bez błędów.
+  - Wynik testu: **QEMU smoke test PASSED**.

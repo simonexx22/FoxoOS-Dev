@@ -51,6 +51,12 @@ check 'CALAMARES_BIN_OK' 'Calamares installer binary is present and executable'
 check 'CALAMARES_CONF_OK' 'Calamares configuration is present'
 check 'CALAMARES_BRANDING_OK' 'FoxoOS branding for Calamares is present'
 check 'CALAMARES_DESKTOP_OK' 'FoxoOS installer desktop shortcut is present'
+check 'CALAMARES_LAUNCHER_OK' 'Calamares launcher script is present and executable'
+check 'BREEZE_ICONS_OK' 'KDE Breeze icon theme is present'
+check 'PAPIRUS_ICONS_OK' 'Papirus icon theme is present'
+check 'QT6_SVG_OK' 'Qt6 SVG icon engine plugin is installed'
+check 'CALAMARES_QML_LINK_OK' 'Calamares QML symlink is valid'
+check 'CALAMARES_VERSION_OK' 'Calamares runs successfully via sudo without password'
 check 'FOXOS_DIAG_END' 'diagnostics completed'
 
 if grep -a "find: cannot delete" "${LOG}"; then

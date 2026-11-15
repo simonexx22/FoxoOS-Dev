@@ -1,35 +1,40 @@
-#!/bin/sh
+#!/bin/bash
 ###
 # FoxoOS: GUI Installer launcher (Calamares)
 ###
 
 export QT_AUTO_SCREEN_SCALE_FACTOR=1
-
-# Restore or backup fstab if live-build left temporary state
-if [ -f /etc/fstab ] && [ ! -f /etc/fstab.orig.calamares ]; then
-    cp -a /etc/fstab /etc/fstab.orig.calamares 2>/dev/null || true
+export DISPLAY="${DISPLAY:-:0}"
+if [ -z "$XAUTHORITY" ] && [ -f "$HOME/.Xauthority" ]; then
+    export XAUTHORITY="$HOME/.Xauthority"
 fi
 
+# Allow local root to access X11 display
 if command -v xhost >/dev/null 2>&1; then
-    xhost +si:localuser:root 2>/dev/null || true
+    xhost +local:root >/dev/null 2>&1 || xhost + >/dev/null 2>&1 || true
 fi
 
-if [ "1000" -eq 0 ]; then
-    calamares ""
-    rc=0
-elif command -v pkexec >/dev/null 2>&1; then
-    pkexec calamares ""
-    rc=0
-elif command -v sudo >/dev/null 2>&1; then
-    sudo -E calamares ""
-    rc=0
-else
-    su -c "calamares "
-    rc=0
+# 1. If already root, execute directly
+if [ "$(id -u)" -eq 0 ]; then
+    exec /usr/bin/calamares "$@"
 fi
 
-if command -v xhost >/dev/null 2>&1; then
-    xhost -si:localuser:root 2>/dev/null || true
+# 2. In live session, user foxos has NOPASSWD sudo access
+if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+    exec sudo -E env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" /usr/bin/calamares "$@"
 fi
 
-exit 
+# 3. If passwordless sudo not active, try pkexec (graphical auth dialog)
+if command -v pkexec >/dev/null 2>&1; then
+    exec pkexec env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" /usr/bin/calamares "$@"
+fi
+
+# 4. Fallback: prompt for sudo in terminal if available
+if command -v qterminal >/dev/null 2>&1; then
+    exec qterminal -e sudo /usr/bin/calamares "$@"
+elif command -v x-terminal-emulator >/dev/null 2>&1; then
+    exec x-terminal-emulator -e sudo /usr/bin/calamares "$@"
+fi
+
+# 5. Last resort
+exec su -c "/usr/bin/calamares $*"

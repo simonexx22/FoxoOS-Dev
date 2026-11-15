@@ -51,6 +51,16 @@ calamares
 calamares-settings-debian
 cryptsetup
 libkpmcore12
+libpython3.13
+libparted2t64
+parted
+libpwquality1
+libpwquality-common
+libcrack2
+dmidecode
+cracklib-runtime
+libproxy1v5
+libduktape207
 polkitd
 pkexec
 
@@ -68,4 +78,10 @@ lightdm-gtk-greeter
 elogind
 libpam-elogind
 dbus-x11
+
+# Icon themes and SVG rendering
+kf6-breeze-icon-theme
+papirus-icon-theme
+qt6-svg-plugins
+librsvg2-common
 

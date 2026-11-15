@@ -1,0 +1,56 @@
+dev/console c 666 0 0 5 1
+dev/full c 666 0 0 1 7
+dev/null c 666 0 0 1 3
+dev/ptmx c 666 0 0 5 2
+dev/random c 666 0 0 1 8
+dev/tty c 666 0 0 5 0
+dev/urandom c 666 0 0 1 9
+dev/zero c 666 0 0 1 5
+tmp m 1777 0 0
+var/tmp m 1777 0 0
+var/lock m 1777 0 0
+run/lock m 1777 0 0
+var/lib/lightdm m 0750 111 115
+var/log/lightdm m 0711 0 115
+var/cache/lightdm m 0711 0 0
+etc/shadow m 0640 0 42
+etc/gshadow m 0640 0 42
+etc/sudoers m 0440 0 0
+etc/sudoers.d m 0755 0 0
+etc/sudoers.d/foxos m 0440 0 0
+usr/bin/sudo m 4755 0 0
+usr/bin/pkexec m 4755 0 0
+usr/lib/polkit-1/polkit-agent-helper-1 m 4755 0 0
+usr/lib/xorg/Xorg.wrap m 4755 0 0
+usr/bin/su m 4755 0 0
+usr/bin/mount m 4755 0 0
+usr/bin/umount m 4755 0 0
+usr/bin/passwd m 4755 0 0
+usr/bin/chfn m 4755 0 0
+usr/bin/chsh m 4755 0 0
+usr/bin/gpasswd m 4755 0 0
+usr/bin/newgrp m 4755 0 0
+usr/sbin/unix_chkpwd m 2755 0 42
+usr/lib/dbus-1.0/dbus-daemon-launch-helper m 4754 0 990
+usr/bin/calamares m 0755 0 0
+usr/bin/calamares-install-foxoos m 0755 0 0
+home/foxos m 0755 1000 1000
+home/foxos/.profile m 0644 1000 1000
+home/foxos/.face.icon m 0644 1000 1000
+home/foxos/.bashrc m 0644 1000 1000
+home/foxos/.bash_logout m 0644 1000 1000
+home/foxos/.face m 0644 1000 1000
+home/foxos/Desktop m 0755 1000 1000
+home/foxos/Desktop/install-foxoos.desktop m 0755 1000 1000
+home/foxos/.config m 0755 1000 1000
+home/foxos/.config/pcmanfm-qt m 0755 1000 1000
+home/foxos/.config/pcmanfm-qt/lxqt m 0755 1000 1000
+home/foxos/.config/pcmanfm-qt/lxqt/settings.conf m 0644 1000 1000
+home/foxos/.local m 0755 1000 1000
+home/foxos/.local/share m 0755 1000 1000
+home/foxos/.local/share/wallpapers m 0755 1000 1000
+home/foxos/.local/share/wallpapers/foxoos m 0755 1000 1000
+home/foxos/.local/share/wallpapers/foxoos/wallpapermain.png m 0644 1000 1000
+home/foxos/.local/share/icons m 0755 1000 1000
+home/foxos/.local/share/icons/foxoos m 0755 1000 1000
+home/foxos/.local/share/icons/foxoos/logosystemu.png m 0644 1000 1000
