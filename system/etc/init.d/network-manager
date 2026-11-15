@@ -1,0 +1,22 @@
+#!/usr/sbin/openrc-run
+# FoxoOS: usluga OpenRC dla NetworkManager.
+# Debian 13 nie dostarcza juz skryptu /etc/init.d/network-manager,
+# a bez niego po przejsciu na sysvinit VM wstaje bez sieci.
+
+description="NetworkManager"
+supervisor="supervise-daemon"
+command="/usr/sbin/NetworkManager"
+command_args="--no-daemon"
+respawn_delay=5
+respawn_max=10
+
+depend() {
+	need dbus
+	provide net
+	after networking
+	keyword -prefix
+}
+
+start_pre() {
+	checkpath -d -m 0755 /run/NetworkManager
+}

@@ -1,0 +1,7 @@
+# /etc/apt/preferences.d/99-foxoos-no-systemd
+# FoxoOS: nie pozwol, by zwykly "apt upgrade" przywrocil systemd.
+# NIE pinujemy libsystemd0, libsystemd-shared, udev ani
+# systemd-standalone-* — te sa potrzebne jako biblioteki/narzedzia.
+Package: systemd systemd-sysv systemd-timesyncd libpam-systemd libnss-systemd
+Pin: release *
+Pin-Priority: -1

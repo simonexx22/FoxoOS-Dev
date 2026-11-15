@@ -1,0 +1,13 @@
+#!/bin/sh
+# FoxoOS: odtworzenie polecen po usunieciu systemd-sysv.
+# systemd-sysv posiadal /usr/sbin/{reboot,poweroff,telinit} jako symlinki
+# do systemctl. sysvinit-core dostarcza halt/init/shutdown, wiec:
+#   reboot, poweroff -> halt   (halt rozpoznaje akcje po argv[0])
+#   telinit          -> init
+set -e
+
+ln -sfn halt /usr/sbin/reboot
+ln -sfn halt /usr/sbin/poweroff
+ln -sfn init /usr/sbin/telinit
+
+ls -l /usr/sbin/reboot /usr/sbin/poweroff /usr/sbin/telinit
