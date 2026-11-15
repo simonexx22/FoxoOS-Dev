@@ -1,0 +1,41 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          foxoos-live-prepare
+# Required-Start:    $local_fs mountkernfs.sh
+# Required-Stop:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: Prepare live permissions for LightDM, home, and temp dirs
+### END INIT INFO
+
+case "$1" in
+  start|"")
+    # Ensure temporary and runtime directories with correct sticky bits and ownership
+    mkdir -p /tmp /var/tmp /var/lock /run/lock /run/user/1000 /run/lightdm /var/lib/lightdm /var/log/lightdm /var/cache/lightdm
+    chmod 1777 /tmp /var/tmp /var/lock /run/lock 2>/dev/null || true
+
+    # Fix home directory ownership for user foxos
+    if [ -d /home/foxos ]; then
+        chown -R 1000:1000 /home/foxos 2>/dev/null || true
+        chmod 0755 /home/foxos 2>/dev/null || true
+    fi
+    chown -R 1000:1000 /run/user/1000 2>/dev/null || true
+    chmod 0700 /run/user/1000 2>/dev/null || true
+
+    # Fix LightDM state and log directories
+    chown 111:115 /var/lib/lightdm /run/lightdm 2>/dev/null || true
+    chmod 0750 /var/lib/lightdm 2>/dev/null || true
+    chmod 0755 /run/lightdm 2>/dev/null || true
+    chown 0:115 /var/log/lightdm 2>/dev/null || true
+    chmod 0711 /var/log/lightdm 2>/dev/null || true
+    chown 0:0 /var/cache/lightdm 2>/dev/null || true
+    chmod 0711 /var/cache/lightdm 2>/dev/null || true
+
+    # Ensure display manager link
+    echo "/usr/sbin/lightdm" > /etc/X11/default-display-manager 2>/dev/null || true
+    ;;
+  *)
+    exit 0
+    ;;
+esac
+exit 0

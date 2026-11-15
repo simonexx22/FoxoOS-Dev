@@ -21,6 +21,7 @@ add_service() {
 # Core sysinit services. Packages normally register these through update-rc.d;
 # listing them explicitly keeps the image reproducible if install order changes.
 for _svc in \
+	foxoos-live-prepare \
 	udev kmod hostname.sh mountkernfs.sh mountdevsubfs.sh \
 	checkroot.sh checkroot-bootclean.sh checkfs.sh mountall.sh \
 	mountall-bootclean.sh mountnfs.sh mountnfs-bootclean.sh \

@@ -42,6 +42,8 @@ check 'is running|status: started' 'services started by OpenRC'
 check '10\.0\.2\.15' 'DHCP address from QEMU user network'
 check 'deb\.debian\.org' 'DNS resolves deb.debian.org'
 check '1 received|0% packet loss' 'ping 1.1.1.1 succeeds'
+check 'WRITE_HOME_OK' 'user foxos can write to home directory (no Permission denied)'
+check 'WRITE_TMP_OK' '/tmp is writable by user (no Permission denied)'
 check 'XORG_BIN_OK' 'Xorg binary is present and executable'
 check 'LIGHTDM_BIN_OK' 'LightDM display manager binary is present'
 check 'LXQT_BIN_OK' 'LXQt session binary is present'
@@ -56,6 +58,13 @@ if grep -a "find: cannot delete" "${LOG}"; then
     fail=1
 else
     echo "PASS: no find cannot delete flood (bootclean cleanly skipped live mounts)"
+fi
+
+if grep -a "Permission denied" "${LOG}"; then
+    echo "FAIL: Permission denied error detected in log!" >&2
+    fail=1
+else
+    echo "PASS: no Permission denied errors during session execution"
 fi
 
 echo
