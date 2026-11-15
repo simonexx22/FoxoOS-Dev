@@ -8,7 +8,7 @@ _image_id="$(sed -n 's/^IMAGE_ID=//p' /etc/os-release 2>/dev/null | head -n1 || 
 _debian_version="$(cat /etc/debian_version 2>/dev/null || echo unknown)"
 
 cat > /etc/os-release <<EOF
-PRETTY_NAME="FoxoOS 1.0 (Debian 13 trixie base)"
+PRETTY_NAME="FoxoOS"
 NAME="FoxoOS"
 VERSION_ID="13"
 VERSION="13 (trixie)"
@@ -80,3 +80,12 @@ fi
 
 # Make the root filesystem's identity visible in logs.
 printf 'FoxoOS 1.0 live image (Debian 13 trixie base)\n' > /etc/foxoos-release
+
+# Desktop branding alternatives for wallpaper
+if command -v update-alternatives >/dev/null 2>&1; then
+	if [ -f /usr/share/wallpapers/foxoos/wallpapermain.png ]; then
+		update-alternatives --install /usr/share/images/desktop-base/desktop-background desktop-background /usr/share/wallpapers/foxoos/wallpapermain.png 100 2>/dev/null || true
+		update-alternatives --set desktop-background /usr/share/wallpapers/foxoos/wallpapermain.png 2>/dev/null || true
+	fi
+fi
+

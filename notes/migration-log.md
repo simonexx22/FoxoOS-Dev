@@ -137,3 +137,46 @@ udev pozostaje.
   - ICMP ping (`1.1.1.1`): PASS
   - Czyste zamknięcie systemu (`poweroff -f` -> `reboot: Power down`): PASS
   - Wszystkie 11 kontroli automatycznych: PASS (`tests/qemu-20261115-210331.log`).
+
+## 11. Naprawa bootowania Live ISO, UEFI i pełny branding (2026-11-15)
+
+- **Diagnoza błędu rozruchu („No root device specified. Boot arguments must include a root= parameter”)**:
+  - W dystrybucjach live opartych na `live-boot` skrypt `/init` z initramfs ładuje `/scripts/live` wyłącznie wtedy, gdy parametr `boot=live` zostanie przekazany w linii poleceń jądra.
+  - W przeciwnym razie initramfs przyjmuje `BOOT=local` i przekazuje kontrolę do `/scripts/local`. Przy braku parametru `root=` skrypt ten wywołuje `panic` i zrzuca sesję do BusyBoxa.
+  - **Rozwiązanie w projekcie live-build**:
+    - W `auto/config` jawnie skonfigurowano `--bootappend-live` z parametrem `boot=live components quiet ...`.
+    - W `iso_root/boot/grub/grub.cfg` wpisy menu `menuentry` (domyślny, fail-safe oraz weryfikacja) bezwzględnie przekazują `boot=live components`.
+    - Dodano obsługę UEFI obok BIOS: `grub-efi-amd64-bin`, `grub-efi-ia32-bin`, wygenerowano obraz FAT `boot/grub/efi.img` oraz hybrydowe nagłówki El Torito w `xorriso`.
+- **Wdrożenie logo i tapety użytkownika**:
+  - Plik tapety `/home/foxos/Downloads/wallpapermain.png` (1920x1080) wdrożony do:
+    - Host VM (aktywny pulpit LXQt użytkownika `foxos` przez `pcmanfm-qt -w`)
+    - Live ISO: `/usr/share/wallpapers/foxoos/wallpapermain.png`
+    - Domyślna konfiguracja PCManFM-Qt: `/etc/xdg/pcmanfm-qt/lxqt/settings.conf` i `/etc/skel/.config/pcmanfm-qt/lxqt/settings.conf`
+    - Ekran logowania LightDM: `/etc/lightdm/lightdm-gtk-greeter.conf`
+    - Alternatywa Debiana `desktop-background` (`update-alternatives`)
+  - Plik logo `/home/foxos/Downloads/logosystemu.png` (500x500 RGBA) wdrożony do:
+    - Host VM: awatar sesji `~/.face` i `~/.face.icon`, ikona menu `~/.local/share/icons/`
+    - Live ISO: `/usr/share/icons/foxoos/logosystemu.png`, `/usr/share/icons/hicolor/512x512/places/start-here-lxqt.png`, `/etc/skel/.face`
+    - Ekran logowania LightDM (`default-user-image`)
+    - Tło startowe menu GRUB: `config/bootloaders/grub-pc/splash.png` (kompozycja tapety 800x600 i logo 140x140 wygenerowana przy użyciu GdkPixbuf/Cairo)
+- **Identyfikacja systemu**:
+  - `/etc/os-release`: `NAME="FoxoOS"`, `PRETTY_NAME="FoxoOS"`, z zachowaniem `ID=debian`, `VERSION_CODENAME=trixie`, `VERSION_ID="13"`.
+- **Nowy obraz ISO**:
+  - **Ścieżka**: `/home/foxos/foxoos/foxoos-1.0-amd64.iso`
+  - **Rozmiar**: 324 MB (339 052 544 B)
+  - **SHA-256**: `6495abb3f593328a39481cd97dbd27353ae720cbb1b63d587f6658711c707d0e`
+  - **El Torito**: MBR BIOS grub2-mbr + UEFI El Torito alt-boot (`/boot/grub/efi.img`)
+- **Wynik testu automatycznego QEMU TCG (`tests/qemu-20261115-215020.log`)**:
+  - PID 1 is init (`sysvinit-core`): PASS
+  - `/proc/1/exe` is `/usr/sbin/init`: PASS
+  - os-release identifies FoxoOS (`PRETTY_NAME="FoxoOS"`, `NAME="FoxoOS"`): PASS
+  - os-release keeps Debian base ID (`ID=debian`): PASS
+  - `FOXOS_VERSION="1.0"` present: PASS
+  - Brak menedżera systemd (`NO_SYSTEMD_MANAGER`): PASS
+  - Usługi OpenRC działają (`network-manager`, `dbus`, `rsyslogd` running): PASS
+  - Adres sieciowy DHCP (`10.0.2.15/24` na `ens3`): PASS
+  - Rezolucja DNS (`deb.debian.org` -> `2a04:4e42:41::644`): PASS
+  - Ping ICMP (`1.1.1.1`): PASS (0% packet loss)
+  - Czyste wyłączenie zasilania (`poweroff -f` -> `reboot: Power down`): PASS
+  - Wszystkie 11 asercji testowych: PASS
+
