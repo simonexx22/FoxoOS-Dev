@@ -218,7 +218,7 @@ udev pozostaje.
 - **Nowy obraz ISO i weryfikacja automatyczna**:
   - **Plik ISO**: `/home/foxos/foxoos/foxoos-1.0-amd64.iso`
   - **Rozmiar**: 367 MB (383 801 344 B)
-  - **SHA-256**: `fcd6cdf55ab49078c4a251e60830db729c3210aba852e17812522bd2e2610e80`
+  - **SHA-256**: `2d2cfc94754b9e22f48d5a6483dc8f8313b7a68c2929048f8b46b1f600eb6eea`
   - **Wynik testu automatycznego QEMU TCG (`tests/qemu-20261115-221949.log`)**:
     - PID 1 is init (`sysvinit-core`): PASS
     - `/proc/1/exe` is `/usr/sbin/init`: PASS
