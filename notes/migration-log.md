@@ -236,3 +236,77 @@ udev pozostaje.
     - Skrót pulpitu instalatora obecny (`CALAMARES_DESKTOP_OK`): PASS
     - Czyste wyłączenie zasilania (`poweroff -f` -> `reboot: Power down`): PASS
     - Wszystkie 15 asercji testowych: PASS
+
+## 13. Rozwiązanie problemu bootclean find -delete oraz wdrożenie pełnego środowiska graficznego LXQt i autologinu LightDM (2026-11-15 23:05)
+
+### 1. Diagnoza błędu rozruchu `find: cannot delete './live/rootfs/filesystem.squashfs/...': Read-only file system`
+- **Identyfikacja skryptu**: `/usr/lib/init/bootclean.sh` (oraz `/lib/init/bootclean.sh` z pakietu Debian `initscripts`).
+- **Katalog wyjściowy czyszczenia**: `$dir = /run` (funkcja `clean /run (...)` wywoływana z `clean_all()`).
+- **Przyczyna**:
+  W trybie Live (`live-boot`) obraz SquashFS oraz nośnik instalacyjny montowane są w poddrzewie `/run/live/` (w tym montowanie tylko-do-odczytu `/run/live/rootfs/filesystem.squashfs`).
+  W Debianie standardowa funkcja `clean /run` wykonywała polecenie `cd "$dir" && find . $findopts -delete`. Ponieważ nie zawierała flagi `-xdev` ani wykluczenia podkatalogów `./live*`, `find` rekursywnie przeszukiwał całe zamontowane drzewo SquashFS i próbował skasować pliki na systemie plików tylko do odczytu, co generowało tysiące błędów na konsoli `tty1`.
+- **Wdrożona poprawka**:
+  W funkcji `clean()` w pliku `bootclean.sh` zmodyfikowano wywołanie:
+  `find . -xdev ! -path './live*' ! -path './rootfs*' $findopts -delete \`
+  - `-xdev`: zatrzymuje `find` przed przekraczaniem granic innych systemów plików (innych punktów montowania).
+  - `! -path './live*' ! -path './rootfs*'`: jawnie ignoruje strukturę montowania `live-boot`.
+  - Zachowano pełne standardowe czyszczenie pozostałych plików tymczasowych w `/run`, `/run/lock` i `/run/shm`.
+  - SquashFS pozostaje bezpiecznie w trybie `ro`, a parametr `boot=live` jest zachowany.
+- **Trwałość przed aktualizacjami APT**:
+  Poprawka została umieszczona w projekcie w `config/includes.chroot/usr/lib/init/bootclean.sh` oraz w `system/usr/lib/init/bootclean.sh`, a w hooku `config/hooks/normal/0100-foxoos-branding.hook.chroot` zarejestrowano dywersję pakietową:
+  `dpkg-divert --local --no-rename --add --divert /usr/lib/init/bootclean.sh.debian /usr/lib/init/bootclean.sh`
+
+### 2. Integracja środowiska graficznego LXQt i autologinu LightDM
+- **Zainstalowane pakiety GUI (wyłącznie oficjalne repozytoria Debiana 13 trixie, 0 pakietów menedżera systemd)**:
+  - `xorg`, `xserver-xorg`, `xserver-xorg-legacy`, `xinit`, `openbox`
+  - `lxqt-core`, `qterminal`, `pcmanfm-qt`
+  - `lightdm`, `lightdm-gtk-greeter`
+  - `elogind`, `libpam-elogind`, `dbus-x11`
+  - Pakiety dodano do `config/package-lists/foxoos.list.chroot` oraz zaktualizowano manifest `iso_root/live/filesystem.packages`.
+- **Konfiguracja autologinu Live**:
+  - Utworzono plik konfiguracyjny `/etc/lightdm/lightdm.conf.d/80-live-autologin.conf`:
+    ```ini
+    [Seat:*]
+    autologin-user=foxos
+    autologin-user-timeout=0
+    user-session=lxqt
+    greeter-session=lightdm-gtk-greeter
+    ```
+  - Skonfigurowano uprawnienia Xorg (`/etc/X11/Xwrapper.config`): `allowed_users=anybody`, `needs_root_rights=yes` oraz suid dla `/usr/lib/xorg/Xorg.wrap` w SquashFS pseudo-spec (`usr/lib/xorg/Xorg.wrap m 4755 0 0`).
+  - Dodano użytkownika `foxos` do grup: `autologin`, `video`, `audio`, `input`, `plugdev`, `netdev`, `dialout`, `users`, `sudo`.
+  - Włączono usługi OpenRC w poziomie uruchomieniowym `default`:
+    - `lightdm` (`/etc/runlevels/default/lightdm -> /etc/init.d/lightdm`)
+    - `elogind` (`/etc/runlevels/default/elogind -> /etc/init.d/elogind`)
+  - Skonfigurowano autostart i wygląd pulpitu LXQt (`/home/foxos/.config/pcmanfm-qt/lxqt/settings.conf` oraz `/etc/skel/.config/pcmanfm-qt/lxqt/settings.conf`): tapeta FoxoOS `/usr/share/wallpapers/foxoos/wallpapermain.png`.
+  - Na pulpicie umieszczono skrót instalatora graficznego: `/home/foxos/Desktop/install-foxoos.desktop` („Zainstaluj FoxoOS”).
+
+### 3. Zbudowany obraz ISO i weryfikacja automatyczna
+- **Ścieżka do pliku ISO**: `/home/foxos/foxoos/foxoos-1.0-amd64.iso`
+- **Rozmiar**: 591 MB (618 938 368 B)
+- **Suma kontrolna SHA-256**: `337eef103ece43d9ee6a0648b882dde83b08a39fc1a6c474898412926bae0b24`
+- **Wynik testu automatycznego QEMU TCG (`scripts/test-qemu.sh`)**:
+  - `PASS: PID 1 is init (sysvinit-core)`
+  - `PASS: /proc/1/exe is /usr/sbin/init`
+  - `PASS: os-release identifies FoxoOS`
+  - `PASS: os-release keeps Debian base ID`
+  - `PASS: FOXOS_VERSION present`
+  - `PASS: no systemd/systemd-sysv manager packages`
+  - `PASS: services started by OpenRC`
+  - `PASS: DHCP address from QEMU user network`
+  - `PASS: DNS resolves deb.debian.org`
+  - `PASS: ping 1.1.1.1 succeeds`
+  - `PASS: Xorg binary is present and executable`
+  - `PASS: LightDM display manager binary is present`
+  - `PASS: LXQt session binary is present`
+  - `PASS: Calamares installer binary is present and executable`
+  - `PASS: Calamares configuration is present`
+  - `PASS: FoxoOS branding for Calamares is present`
+  - `PASS: FoxoOS installer desktop shortcut is present`
+  - `PASS: no find cannot delete flood (bootclean cleanly skipped live mounts)`
+  - `PASS: diagnostics completed`
+  - Status usług w uruchomionym systemie:
+    - `NetworkManager is running.`
+    - `dbus is running.`
+    - `rsyslogd is running.`
+    - `lightdm is running.`
+    - `elogind is running.`
