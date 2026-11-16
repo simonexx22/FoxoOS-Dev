@@ -18,6 +18,7 @@ case "$1" in
     if [ -d /home/foxos ]; then
         chown -R 1000:1000 /home/foxos 2>/dev/null || true
         chmod 0755 /home/foxos 2>/dev/null || true
+        chmod 0700 /home/foxos/.local /home/foxos/.local/share /home/foxos/.local/share/gvfs-metadata 2>/dev/null || true
     fi
     chown -R 1000:1000 /run/user/1000 2>/dev/null || true
     chmod 0700 /run/user/1000 2>/dev/null || true

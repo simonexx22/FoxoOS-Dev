@@ -1,0 +1,26 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          live-tools
+# Required-Start:
+# Required-Stop:     sendsigs
+# Default-Start:
+# Default-Stop:      0 6
+# Short-Description: live-tools - System Support Scripts
+# Description:       live-tools contains additional support scripts for live systems.
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+case "${1}" in
+	stop)
+		if [ -e /usr/bin/live-medium-eject ]
+		then
+			/usr/bin/live-medium-eject ${@}
+		fi
+		;;
+
+	start|force-reload|restart)
+
+		;;
+esac

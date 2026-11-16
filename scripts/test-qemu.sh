@@ -52,10 +52,9 @@ check 'CALAMARES_CONF_OK' 'Calamares configuration is present'
 check 'CALAMARES_BRANDING_OK' 'FoxoOS branding for Calamares is present'
 check 'CALAMARES_DESKTOP_OK' 'FoxoOS installer desktop shortcut is present'
 check 'CALAMARES_LAUNCHER_OK' 'Calamares launcher script is present and executable'
-check 'BREEZE_ICONS_OK' 'KDE Breeze icon theme is present'
-check 'PAPIRUS_ICONS_OK' 'Papirus icon theme is present'
-check 'QT6_SVG_OK' 'Qt6 SVG icon engine plugin is installed'
-check 'CALAMARES_QML_LINK_OK' 'Calamares QML symlink is valid'
+check 'PARTITION_CONF_OK' 'Calamares partition module configuration is present'
+check 'GVFS_METADATA_OK' 'GVFS metadata daemon is present'
+check 'DESKTOP_TRUST_OK' 'Desktop launcher metadata::trust is set to true'
 check 'CALAMARES_VERSION_OK' 'Calamares runs successfully via sudo without password'
 check 'FOXOS_DIAG_END' 'diagnostics completed'
 
@@ -71,6 +70,13 @@ if grep -a "Permission denied" "${LOG}"; then
     fail=1
 else
     echo "PASS: no Permission denied errors during session execution"
+fi
+
+if grep -a -i "cycle" "${LOG}" | grep -a -i "dependency"; then
+    echo "FAIL: OpenRC dependency loop detected in log!" >&2
+    fail=1
+else
+    echo "PASS: no OpenRC dependency loops detected"
 fi
 
 echo

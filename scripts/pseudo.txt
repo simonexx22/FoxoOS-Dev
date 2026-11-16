@@ -54,3 +54,6 @@ home/foxos/.local/share/wallpapers/foxoos/wallpapermain.png m 0644 1000 1000
 home/foxos/.local/share/icons m 0755 1000 1000
 home/foxos/.local/share/icons/foxoos m 0755 1000 1000
 home/foxos/.local/share/icons/foxoos/logosystemu.png m 0644 1000 1000
+home/foxos/.local/share/gvfs-metadata m 0700 1000 1000
+home/foxos/.local/share/gvfs-metadata/home m 0600 1000 1000
+home/foxos/.local/share/gvfs-metadata/root m 0600 1000 1000

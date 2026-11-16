@@ -1,9 +1,9 @@
 ---
 componentName:   foxoos
 welcomeStyleCalamares: true
-welcomeExpandingLogo: true
+welcomeExpandingLogo: false
 windowExpanding: normal
-windowSize: 850px,600px
+windowSize: 800px,500px
 windowPlacement: center
 
 strings:

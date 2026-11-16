@@ -14,6 +14,37 @@ if command -v xhost >/dev/null 2>&1; then
     xhost +local:root >/dev/null 2>&1 || xhost + >/dev/null 2>&1 || true
 fi
 
+# Check for writable disk devices (ignore read-only optical drives and loops)
+check_disks() {
+    local disks
+    disks=$(lsblk -dno TYPE,RO,NAME 2>/dev/null | awk '$1=="disk" && $2=="0" {print $3}')
+    if [ -n "$disks" ]; then
+        return 0
+    fi
+    return 1
+}
+
+# If no disk is found, show informative Polish message
+if ! check_disks; then
+    msg="Nie wykryto dysku twardego do instalacji FoxoOS!
+
+Do maszyny wirtualnej lub komputera nie jest podłączony żaden zapisywalny dysk twardy (wykryto jedynie nośnik instalacyjny Live CD).
+
+Aby zainstalować system FoxoOS:
+1. Wyłącz maszynę wirtualną w VirtualBoxie.
+2. Wejdź w Ustawienia -> Pamięć (Storage).
+3. Dodaj kontroler SATA/NVMe i utwórz wirtualny dysk twardy (np. VDI 20 GB).
+4. Uruchom ponownie FoxoOS Live i kliknij 'Zainstaluj FoxoOS'.
+
+Czy chcesz mimo to uruchomić instalator (np. w trybie diagnostycznym)?"
+
+    if [ -n "$DISPLAY" ] && command -v xmessage >/dev/null 2>&1; then
+        if xmessage -center -title "FoxoOS: Brak dysku twardego" -buttons "Zamknij:0,Uruchom mimo to:1" -default Zamknij "$msg"; then
+            exit 0
+        fi
+    fi
+fi
+
 # 1. If already root, execute directly
 if [ "$(id -u)" -eq 0 ]; then
     exec /usr/bin/calamares "$@"

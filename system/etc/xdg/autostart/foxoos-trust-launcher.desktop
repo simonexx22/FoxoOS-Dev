@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=FoxoOS Launcher Trust
+Comment=Marks FoxoOS installer desktop launcher as trusted
+Exec=sh -c "gio set -t string $HOME/Desktop/install-foxoos.desktop metadata::trust true 2>/dev/null || true"
+OnlyShowIn=LXQt;
+NoDisplay=true
+X-LXQt-Need-Tray=false

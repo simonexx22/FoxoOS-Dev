@@ -1,51 +1,56 @@
 desktop-image: "../splash.png"
-title-color: "#ffffff"
-title-font: "Unifont Regular 16"
+desktop-color: "#12151c"
+
 title-text: "FoxoOS 1.0 Live"
+title-font: "Unifont Regular 16"
+title-color: "#ffffff"
+
 message-font: "Unifont Regular 16"
+message-color: "#ff7800"
 terminal-font: "Unifont Regular 16"
 
-#help bar at the bottom
-+ label {
-        top = 100%-50
-        left = 0
-        width = 100%
-        height = 20
-        text = "@KEYMAP_SHORT@"
-        align = "center"
-        color = "#ffffff"
-	font = "Unifont Regular 16"
-}
-
-#boot menu
+# FoxoOS Boot Menu
 + boot_menu {
-        left = 10%
-        width = 80%
-        top = 52%
-        height = 48%-80
-        item_color = "#a8a8a8"
-	item_font = "Unifont Regular 16"
-        selected_item_color= "#ffffff"
-	selected_item_font = "Unifont Regular 16"
-        item_height = 16
-        item_padding = 0
-        item_spacing = 4
-	icon_width = 0
-	icon_heigh = 0
-	item_icon_space = 0
+    left = 6%
+    width = 88%
+    top = 22%
+    height = 54%
+    item_font = "Unifont Regular 16"
+    selected_item_font = "Unifont Regular 16"
+    item_color = "#b0b8c4"
+    selected_item_color = "#ffffff"
+    selected_item_pixmap_style = "select_*.png"
+    item_height = 28
+    item_padding = 5
+    item_spacing = 8
+    icon_width = 0
+    icon_height = 0
+    item_icon_space = 0
 }
 
-#progress bar
+# Countdown Progress Bar
 + progress_bar {
-        id = "__timeout__"
-        left = 15%
-        top = 100%-80
-        height = 16
-        width = 70%
-        font = "Unifont Regular 16"
-        text_color = "#000000"
-        fg_color = "#ffffff"
-        bg_color = "#a8a8a8"
-        border_color = "#ffffff"
-        text = "@TIMEOUT_NOTIFICATION_LONG@"
+    id = "__timeout__"
+    left = 6%
+    width = 88%
+    top = 80%
+    height = 20
+    font = "Unifont Regular 16"
+    text = "Automatyczne uruchomienie za: %d s"
+    text_color = "#ffffff"
+    fg_color = "#ff7800"
+    bg_color = "#1a1e28"
+    border_color = "#ff7800"
+}
+
+# Keyboard Hints
++ label {
+    left = 0
+    top = 89%
+    width = 100%
+    height = 24
+    text = "Enter: Uruchom   |   e: Edycja opcji   |   c: Wiersz polecen GRUB"
+    align = "center"
+    color = "#e0e6ed"
+    font = "Unifont Regular 16"
 }

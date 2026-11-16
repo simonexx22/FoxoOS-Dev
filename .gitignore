@@ -31,3 +31,4 @@
 # local test artifacts
 /tests/*.log
 /tests/*.png
+debs-cache/

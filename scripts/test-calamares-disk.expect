@@ -1,0 +1,55 @@
+#!/usr/bin/expect -f
+set timeout 600
+set iso "/home/foxos/foxoos/foxoos-1.0-amd64.iso"
+set disk "/tmp/test_blank_disk.raw"
+
+log_user 1
+
+spawn qemu-system-x86_64 \
+    -name FoxoOS-disk-test \
+    -machine pc,accel=tcg \
+    -m 2048 -smp 2 \
+    -cdrom $iso \
+    -drive file=$disk,format=raw,if=virtio \
+    -boot d \
+    -nic user,model=e1000 \
+    -display none -monitor none -serial stdio \
+    -no-reboot
+
+expect {
+    -re "foxoos login:" {}
+    timeout {
+        puts stderr "TIMEOUT waiting for login"
+        exit 1
+    }
+}
+
+send "foxos\r"
+expect "Password:"
+send "live\r"
+expect {[$#] $}
+
+send "echo DISK_TEST_START\r"
+expect "DISK_TEST_START"
+
+# 1. Verify disk detection via lsblk
+send "lsblk -dno TYPE,RO,NAME,SIZE\r"
+expect {[$#] $}
+
+# 2. Test calamares-install-foxoos disk detection logic
+send "test -n \"\$(lsblk -dno TYPE,RO,NAME | awk '\$1==\"disk\" && \$2==\"0\" {print \$3}')\" && echo 'WRITABLE_DISK_DETECTED_OK'\r"
+expect "WRITABLE_DISK_DETECTED_OK"
+
+# 3. Run Calamares in debug mode offscreen and inspect partition module scanning
+send "sudo -n /usr/bin/calamares -d -platform offscreen > /tmp/calamares_debug.log 2>&1 & sleep 10; pkill -9 -f calamares 2>/dev/null || true; grep -iE 'partition|device|vda' /tmp/calamares_debug.log | head -n 30; echo CALAMARES_DISK_LOG_DONE\r"
+expect "CALAMARES_DISK_LOG_DONE"
+
+send "echo DISK_TEST_END\r"
+expect "DISK_TEST_END"
+
+send "sudo poweroff -f || sudo halt -f -p\r"
+set timeout 15
+expect {
+    eof {}
+    timeout { puts "Poweroff complete" }
+}
