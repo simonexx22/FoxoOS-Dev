@@ -13,6 +13,11 @@ run/lock m 1777 0 0
 var/lib/lightdm m 0750 111 115
 var/log/lightdm m 0711 0 115
 var/cache/lightdm m 0711 0 0
+var/cache/cracklib d 0755 0 0
+var/cache/cracklib/cracklib_dict.hwm m 0644 0 0
+var/cache/cracklib/cracklib_dict.pwd m 0644 0 0
+var/cache/cracklib/cracklib_dict.pwi m 0644 0 0
+var/cache/cracklib/src-dicts m 0644 0 0
 etc/shadow m 0640 0 42
 etc/gshadow m 0640 0 42
 etc/sudoers m 0440 0 0
