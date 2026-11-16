@@ -1,141 +1,115 @@
 # FoxoOS
 
-Dystrybucja oparta na Debian GNU/Linux 13 (Trixie), z **sysvinit-core jako PID 1**
-i **OpenRC** do usług. Repozytoria i pakiety pozostają oficjalnie Debiana
-(bez Devuan). Jest też minimalny **live ISO** budowany przez live-build.
+[![Release](https://img.shields.io/badge/release-v0.1.0--alpha-orange.svg)](https://github.com/)
+[![Base](https://img.shields.io/badge/base-Debian%2013%20Trixie-blue.svg)](https://www.debian.org)
+[![Init](https://img.shields.io/badge/init-sysvinit--core%20%2B%20OpenRC-green.svg)](https://wiki.debian.org/OpenRC)
 
-## Stan prac
+Lekka dystrybucja bazująca na **Debianie 13 (Trixie)**, z **sysvinit-core jako PID 1** oraz **OpenRC** do zarządzania usługami. Repozytoria i pakiety pochodzą w 100% z oficjalnego Debiana (bez repozytoriów Devuan). System zawiera graficzny pulpit **LXQt**, menedżer logowania **LightDM** (z elogind) oraz instalator graficzny **Calamares**.
 
-- [x] Audyt VM i warstwy terminala (realna VM VirtualBox, nie sandbox)
-- [x] Symulacja etapu 1 i etapu 2 (bez zmian w systemie)
-- [x] Snapshot VirtualBox (po stronie użytkownika)
-- [x] Etap 1: sysvinit-core + openrc, usunięcie systemd-sysv, reboot
-- [x] Weryfikacja: PID 1, rc-status, login, sieć, DNS
-- [x] Etap 2: usunięcie pakietu systemd + pin APT
-- [x] LXQt + lightdm + elogind (zamiast GNOME/GDM)
-- [x] Branding FoxoOS (os-release, issue, motd, GRUB)
-- [ ] ISO live-build + test bootu w osobnej VM
-- [ ] KDE Plasma (później; wybrano LXQt)
+> [!IMPORTANT]
+> Wydanie **v0.1.0-alpha** to wczesna wersja deweloperska przeznaczona dla współtwórców (contributors) oraz do testów na maszynach wirtualnych (VM).
 
-## FoxoOS na tej VM
+---
 
-- PID 1: `sysvinit-core` (`/usr/sbin/init`)
-- Usługi: OpenRC (`rc-status`, `rc-service`, `rc-update`)
-- Sieć: NetworkManager + DHCP + DNS
-- Pulpit: LXQt, logowanie przez lightdm (elogind zamiast systemd-logind)
-- Brak menedżera systemd: `systemctl` nie istnieje
-- Dozwolone biblioteki/narzędzia: `libsystemd0`, `libsystemd-shared`, `udev`,
-  `systemd-standalone-sysusers`, `systemd-standalone-tmpfiles`
-- Pin APT: `/etc/apt/preferences.d/99-foxoos-no-systemd` blokuje powrót
-  `systemd`, `systemd-sysv`, `systemd-timesyncd`, `libpam-systemd`,
-  `libnss-systemd`
+## Cechy FoxoOS
 
-### Branding
+- **PID 1:** `sysvinit-core` (`/sbin/init`)
+- **Menedżer usług:** OpenRC (`rc-status`, `rc-service`, `rc-update`)
+- **Brak menedżera systemd:** polecenie `systemctl` nie istnieje; brak `systemd-sysv`
+- **Dozwolone biblioteki systemd:** `libsystemd0`, `libsystemd-shared`, `udev`, `systemd-standalone-sysusers`, `systemd-standalone-tmpfiles`
+- **APT Pinning:** `/etc/apt/preferences.d/99-foxoos-no-systemd` trwale blokuje pakiety `systemd`, `systemd-sysv`, `systemd-timesyncd`, `libpam-systemd`, `libnss-systemd`
+- **Środowisko graficzne:** LXQt + Openbox + panel i motywy FoxoOS
+- **Menedżer logowania:** LightDM + `elogind` (zastępuje systemd-logind)
+- **Instalator:** Calamares dostosowany do pracy w środowisku SysVinit / OpenRC
+- **Bootloader:** Minimalistyczny, czytelny motyw ciemny GRUB z pełną obsługą UTF-8 (DejaVu Sans) zarówno w sesji Live USB, jak i po zainstalowaniu na dysku twardym
 
-`/etc/os-release` ma `NAME="FoxoOS"`, `PRETTY_NAME="FoxoOS 1.0 (Debian 13 trixie base)"`,
-`FOXOS_VERSION="1.0"` i celowo `ID=debian` oraz `ID_LIKE=debian` — dzięki temu
-narzędzia Debiana nadal rozpoznają bazę. Dodatkowo:
+---
 
-- `/etc/issue`, `/etc/issue.net`, `/etc/motd` — powitanie konsoli
-- `/etc/lsb-release` — identyfikacja FoxoOS
-- `/etc/debian_version` — nietknięte (kompatybilność)
-- GRUB: `GRUB_DISTRIBUTOR="FoxoOS 1.0 GNU/Linux"`
-- pliki Debiana są odsunięte przez `dpkg-divert` (`*.debian`), więc aktualizacja
-  `base-files` nie skasuje brandingu
+## Wymagania do budowy obrazu ISO
 
-## ISO live-build
+Budowanie obrazu Live ISO odbywa się przy użyciu pakietu `live-build` oraz narzędzi ISO:
 
-Minimalny obraz tekstowy (bez X11): sysvinit-core + OpenRC, NetworkManager,
-rsyslog, text login. Nie zawiera `systemd`/`systemd-sysv`.
+```bash
+sudo apt-get update
+sudo apt-get install -y live-build xorriso squashfs-tools mtools dosfstools rsync
+```
 
-### Wymagania (host budujący)
+Do testów automatycznych w QEMU przydatne są:
+```bash
+sudo apt-get install -y qemu-system-x86 expect
+```
 
-    apt-get install live-build xorriso squashfs-tools mtools dosfstools rsync
+---
 
-Do testu QEMU dodatkowo:
+## Procedura budowania ISO
 
-    apt-get install qemu-system-x86 expect
+### 1. Pełna kompilacja przez live-build:
+```bash
+cd /home/foxos/foxoos
+make build
+```
+Wynikiem jest plik `foxoos-0.1.0-alpha-amd64.iso` oraz plik sumy kontrolnej `.sha256`.
 
-### Budowanie
+### 2. Szybka finalizacja / ponowne spakowanie SquashFS:
+Jeśli wprowadzono zmiany w strukturze plików, można użyć skryptu pomocniczego:
+```bash
+./scripts/finalize_iso.sh
+```
 
-    cd /home/foxos/foxoos
-    make build
+---
 
-Wynik:
+## Testowanie i weryfikacja
 
-    foxoos-1.0-amd64.iso
-    foxoos-1.0-amd64.iso.sha256
-    foxoos-1.0-amd64.packages        # manifest pakietów (jeśli live-build go zapisał)
+### Dane domyślne sesji Live:
+- **Użytkownik:** `foxos`
+- **Hasło:** `live`
+- **Sudo:** bez hasła (`NOPASSWD`)
 
-`make reconfigure` odtwarza konfigurację po zmianie `auto/config`.
-`make distclean` usuwa artefakty — **użyj go po każdej przerwanej budowie**
-(szczegóły w `docs/BUILD.md`).
+### Test w VirtualBox / KVM / QEMU:
+1. Utwórz maszynę wirtualną (typ: Linux / Debian 64-bit), min. 2048 MB RAM, 2 rdzenie CPU.
+2. Podłącz obraz `foxoos-0.1.0-alpha-amd64.iso`.
+3. Po uruchomieniu w menu GRUB wybierz **Uruchom FoxoOS Live**.
+4. Sprawdzenie stanu systemu:
+   ```bash
+   cat /proc/1/comm              # Powinno zwrócić: init
+   rc-status default             # Status usług OpenRC (NetworkManager, dbus, rsyslog)
+   dpkg -l | grep systemd-sysv   # Powinno zwrócić brak pakietu
+   ```
+5. Uruchomienie instalatora z ikony na pulpicie („Zainstaluj FoxoOS”) lub terminala:
+   ```bash
+   calamares-install-foxoos
+   ```
 
-### Logowanie w live ISO
+---
 
-    login: foxos
-    hasło: live
-    sudo:  bez hasła (NOPASSWD)
+## Struktura projektu
 
-To obraz demonstracyjny. Nie używaj tego hasła na komputerze z danymi.
+```text
+├── auto/                     # Konfiguracja live-build (auto/config)
+├── config/
+│   ├── bootloaders/grub-pc/  # Konfiguracja i motyw bootloadera GRUB
+│   ├── hooks/normal/         # Hooki chroot i binary (branding, user, usługi)
+│   ├── includes.chroot/      # Pliki wstrzykiwane bezpośrednio do systemu Live
+│   └── package-lists/        # Listy pakietów APT dla instalacji bazowej
+├── system/                   # Pliki konfiguracyjne instalowanego systemu FoxoOS
+├── scripts/                  # Skrypty budowania, instalacji i testów QEMU
+├── notes/                    # Notatki z migracji i audytu
+├── Makefile                  # Cele kompilacji i testów
+├── README.md                 # Niniejsza dokumentacja
+└── CONTRIBUTING.md           # Zasady współtworzenia projektu
+```
 
-### Test bootu
+---
 
-Automatyczny test przez konsolę szeregową (QEMU TCG, bez KVM):
+## Status testów i znane ograniczenia (v0.1.0-alpha)
 
-    make test
+- **Sesja Live:** W pełni przetestowana i stabilna. LXQt uruchamia się prawidłowo, NetworkManager zarządza siecią, OpenRC poprawnie zarządza usługami, brak błędów D-Bus / polkit.
+- **Instalator Calamares:** Wdrożono poprawki wyszukiwania dysków (`kpmcore` / polkit), obsługi reguł haseł (`cracklib`), wrapper `systemd-machine-id-setup` dla OpenRC oraz oczyszczania pakietów specyficznych dla sesji Live (`packages.conf`).
+- **Testowanie instalatora:** Najnowsze poprawki brandingu i motywu GRUB dla systemu zainstalowanego są przygotowane do weryfikacji manualnej przez społeczność na maszynach wirtualnych. Wszelkie napotkane błędy prosimy zgłaszać w repozytorium GitHub!
 
-Ręcznie w VirtualBox:
+---
 
-1. Nowa VM „FoxoOS-test”, typ Linux/Debian 64-bit, 2048 MB RAM, 2 CPU.
-2. Napęd optyczny: `foxoos-1.0-amd64.iso`; boot z CD/DVD (BIOS).
-3. W menu GRUB wybierz „Live system (amd64)”.
-4. Zaloguj się `foxos` / `live`.
-5. Sprawdź:
+## Licencja i współtworzenie
 
-       cat /proc/1/comm          # init
-       rc-status default         # NetworkManager, dbus, rsyslog...
-       ip -br a                  # adres DHCP
-       getent hosts deb.debian.org
-       ping -c1 1.1.1.1
-       dpkg -l | grep -E '^ii +(systemd|systemd-sysv) ' || echo brak systemd
-
-6. `sudo poweroff` — QEMU/VirtualBox powinien się wyłączyć bez błędu.
-
-### Reproducibility
-
-`auto/config` ustawia `SOURCE_DATE_EPOCH` (stały timestamp metadanych ISO).
-Identyczne wejścia + identyczny stan mirrora Debiana dają identyczny obraz.
-Pakiety nie są pinowane do wersji, więc po aktualizacji mirrora manifest i
-suma SHA-256 mogą się zmienić — to normalne dla obrazu zbudowanego z `trixie`.
-
-## Struktura
-
-    notes/migration-log.md       dziennik: audyt, symulacje, decyzje, wyniki
-    notes/rollback.md            jak cofnąć zmiany
-    packages/README.md           wybrane pakiety, wyjątki (libsystemd0, udev...)
-    services/README.md           mapowanie runleveli, usługi krytyczne
-    system/                      pliki wdrażane na FoxoOS (branding, pin, init.d)
-    scripts/10-stage1-init-swap.sh       transakcja init (wymaga snapshotu)
-    scripts/20-preflight.sh              kontrole przed rebootem
-    scripts/30-stage2-remove-systemd.sh  symulacja/--apply usunięcia systemd
-    scripts/40-post-boot-check.sh        raport po reboocie
-    scripts/50-apply-branding.sh         branding systemu
-    scripts/90-net-fallback.sh           awaryjne przywrócenie sieci (VBox NAT)
-    scripts/qemu-login.expect            test konsoli live ISO
-    scripts/test-qemu.sh                 wrapper testu QEMU
-    auto/config                  pełna konfiguracja live-build
-    config/package-lists/        listy pakietów live ISO
-    config/includes.chroot/      pliki brandingu/konfiguracji w ISO
-    config/hooks/normal/         hooki: branding, użytkownik, usługi,
-                                 czyszczenie, weryfikacja, menu GRUB
-    config/bootloaders/grub-pc/  motyw i splash GRUB
-
-## Zasady
-
-- Zero repozytoriów Devuan; tylko deb.debian.org + security.
-- Nie usuwamy jądra, GRUB-a, apt/dpkg, NetworkManagera, dbus, udev.
-- `libsystemd0`, `libsystemd-shared`, `udev`, `systemd-standalone-*`
-  zostają (uzasadnienie w `packages/README.md`).
-- `--allow-remove-essential` tylko dla reviewed wymiany init, po snapshocie.
-- Snapshot przed każdą nieodwracalną zmianą; wyniki testów w `notes/`.
+Informacje o zasadach zgłaszania błędów i przesyłania poprawek znajdują się w pliku [CONTRIBUTING.md](CONTRIBUTING.md).
+FoxoOS korzysta z komponentów Debiana na licencjach otwartych (GPL, BSD, MIT i kompatybilnych).

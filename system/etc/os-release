@@ -9,6 +9,6 @@ HOME_URL="https://foxoos.example/"
 SUPPORT_URL="https://foxoos.example/support"
 BUG_REPORT_URL="https://foxoos.example/bugs"
 DEBIAN_CODENAME=trixie
-FOXOS_VERSION="1.0"
+FOXOS_VERSION="0.1.0-alpha"
 FOXOS_CODENAME="trixie"
 FOXOS_BASE="Debian GNU/Linux 13"

@@ -45,10 +45,10 @@ done
 # Console greeting files are provided by config/includes.chroot; make sure
 # they exist even if a future refactor moves them into this hook.
 if [ ! -s /etc/issue ]; then
-	printf 'FoxoOS 1.0 (Debian 13 trixie base) \\n \\l\n\n' > /etc/issue
+	printf 'FoxoOS 0.1.0-alpha (Debian 13 trixie base) \\n \\l\n\n' > /etc/issue
 fi
 if [ ! -s /etc/motd ]; then
-	printf 'Welcome to FoxoOS 1.0 Live\n' > /etc/motd
+	printf 'Welcome to FoxoOS 0.1.0-alpha Live\n' > /etc/motd
 fi
 chmod 0644 /etc/issue /etc/issue.net /etc/motd /etc/lsb-release 2>/dev/null || true
 
@@ -80,7 +80,7 @@ EOF
 fi
 
 # Make the root filesystem's identity visible in logs.
-printf 'FoxoOS 1.0 live image (Debian 13 trixie base)\n' > /etc/foxoos-release
+printf 'FoxoOS 0.1.0-alpha live image (Debian 13 trixie base)\n' > /etc/foxoos-release
 
 # Desktop branding alternatives for wallpaper
 if command -v update-alternatives >/dev/null 2>&1; then

@@ -1,13 +1,13 @@
 desktop-image: "../splash.png"
 desktop-color: "#12151c"
 
-title-text: "FoxoOS 1.0 Live"
-title-font: "Unifont Regular 16"
+title-text: "Wybór systemu"
+title-font: "DejaVu Sans Regular 16"
 title-color: "#ffffff"
 
-message-font: "Unifont Regular 16"
+message-font: "DejaVu Sans Regular 16"
 message-color: "#ff7800"
-terminal-font: "Unifont Regular 16"
+terminal-font: "DejaVu Sans Regular 16"
 
 # FoxoOS Boot Menu
 + boot_menu {
@@ -15,8 +15,8 @@ terminal-font: "Unifont Regular 16"
     width = 88%
     top = 22%
     height = 54%
-    item_font = "Unifont Regular 16"
-    selected_item_font = "Unifont Regular 16"
+    item_font = "DejaVu Sans Regular 16"
+    selected_item_font = "DejaVu Sans Regular 16"
     item_color = "#b0b8c4"
     selected_item_color = "#ffffff"
     selected_item_pixmap_style = "select_*.png"
@@ -35,7 +35,7 @@ terminal-font: "Unifont Regular 16"
     width = 88%
     top = 80%
     height = 20
-    font = "Unifont Regular 16"
+    font = "DejaVu Sans Regular 16"
     text = "Automatyczne uruchomienie za: %d s"
     text_color = "#ffffff"
     fg_color = "#ff7800"
@@ -49,8 +49,8 @@ terminal-font: "Unifont Regular 16"
     top = 89%
     width = 100%
     height = 24
-    text = "Enter: Uruchom   |   e: Edycja opcji   |   c: Wiersz polecen GRUB"
+    text = "Enter: Uruchom   |   e: Edycja opcji   |   c: Wiersz poleceń GRUB"
     align = "center"
     color = "#e0e6ed"
-    font = "Unifont Regular 16"
+    font = "DejaVu Sans Regular 16"
 }

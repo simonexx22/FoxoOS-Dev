@@ -22,7 +22,7 @@ Presentation
         Text {
             anchors.horizontalCenter: background1.horizontalCenter
             anchors.top: background1.bottom
-            text: qsTr("Witamy w systemie FoxoOS 1.0.<br/>Instalacja na dysku przebiega automatycznie i potrwa kilka minut.")
+            text: qsTr("Witamy w systemie FoxoOS 0.1.0-alpha.<br/>Instalacja na dysku przebiega automatycznie i potrwa kilka minut.")
             wrapMode: Text.WordWrap
             width: 600
             horizontalAlignment: Text.Center

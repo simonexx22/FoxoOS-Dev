@@ -1,4 +1,4 @@
 DISTRIB_ID=FoxoOS
-DISTRIB_RELEASE=1.0
+DISTRIB_RELEASE=0.1.0-alpha
 DISTRIB_CODENAME=trixie
-DISTRIB_DESCRIPTION="FoxoOS 1.0 (Debian 13 trixie base)"
+DISTRIB_DESCRIPTION="FoxoOS 0.1.0-alpha (Debian 13 trixie base)"

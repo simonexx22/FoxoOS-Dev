@@ -1,0 +1,123 @@
+#!/usr/bin/expect -f
+set timeout 900
+set iso "/home/foxos/foxoos/foxoos-1.0-amd64.iso"
+set disk "/tmp/test_sata.raw"
+
+log_user 1
+
+# Truncate test disk
+exec truncate -s 20G $disk
+
+spawn qemu-system-x86_64 \
+    -name FoxoOS-install-test \
+    -machine pc,accel=tcg \
+    -m 2048 -smp 2 \
+    -cdrom $iso \
+    -device ahci,id=ahci \
+    -drive file=$disk,format=raw,id=satadisk,if=none \
+    -device ide-hd,drive=satadisk,bus=ahci.0 \
+    -boot d \
+    -nic user,model=e1000 \
+    -display none -serial stdio \
+    -no-reboot
+
+expect {
+    -re "foxoos login:" {}
+    timeout {
+        puts stderr "TIMEOUT waiting for login"
+        exit 1
+    }
+}
+
+send "foxos\r"
+expect "Password:"
+send "live\r"
+expect {[$#] $}
+
+send "echo STEP1_VERIFY_TOOLS\r"
+expect "STEP1_VERIFY_TOOLS"
+expect {[$#] $}
+
+send "command -v rsync && rsync --version\r"
+expect {[$#] $}
+
+send "ldd /usr/bin/rsync\r"
+expect {[$#] $}
+
+send "sudo apt-get check; echo APT_CHECK_STATUS: $?\r"
+expect {[$#] $}
+
+send "echo STEP2_PARTITION_DISK\r"
+expect "STEP2_PARTITION_DISK"
+expect {[$#] $}
+
+send "sudo parted /dev/sda --script mklabel msdos mkpart primary ext4 1MiB 100% set 1 boot on\r"
+expect {[$#] $}
+
+send "sudo mkfs.ext4 -F -L foxoos-root /dev/sda1\r"
+expect {[$#] $}
+
+send "echo STEP3_MOUNT_TARGET\r"
+expect "STEP3_MOUNT_TARGET"
+expect {[$#] $}
+
+send "sudo mkdir -p /target && sudo mount /dev/sda1 /target\r"
+expect {[$#] $}
+
+send "echo STEP4_UNPACKFS_RSYNC\r"
+expect "STEP4_UNPACKFS_RSYNC"
+expect {[$#] $}
+
+# This is the exact rsync unpack command that Calamares unpackfs module runs
+send "sudo rsync -aHAXSr --filter='-x trusted.overlay.*' /run/live/rootfs/filesystem.squashfs/ /target/ && echo RSYNC_SUCCESS\r"
+expect {
+    "RSYNC_SUCCESS" {}
+    timeout {
+        puts stderr "TIMEOUT during rsync unpack"
+        exit 1
+    }
+}
+expect {[$#] $}
+
+send "echo STEP5_CONFIGURE_SYSTEM\r"
+expect "STEP5_CONFIGURE_SYSTEM"
+expect {[$#] $}
+
+# Generate clean fstab using disk UUID
+send "UUID=\$(sudo blkid -s UUID -o value /dev/sda1); echo \"UUID=\${UUID} / ext4 errors=remount-ro 0 1\" | sudo tee /target/etc/fstab\r"
+expect {[$#] $}
+
+# Ensure live-config does not run on installed system
+send "sudo rm -rf /target/etc/runlevels/sysinit/live-config /target/etc/runlevels/boot/live-config 2>/dev/null || true\r"
+expect {[$#] $}
+
+# Mount virtual filesystems for chroot
+send "for d in dev dev/pts proc sys run; do sudo mount --bind /\$d /target/\$d; done\r"
+expect {[$#] $}
+
+send "echo STEP6_INSTALL_GRUB\r"
+expect "STEP6_INSTALL_GRUB"
+expect {[$#] $}
+
+send "sudo chroot /target /usr/sbin/grub-install --target=i386-pc /dev/sda\r"
+expect {[$#] $}
+
+send "sudo chroot /target /usr/sbin/update-grub\r"
+expect {[$#] $}
+
+send "for d in run sys proc dev/pts dev; do sudo umount -l /target/\$d; done\r"
+expect {[$#] $}
+
+send "sudo umount /target\r"
+expect {[$#] $}
+
+send "echo INSTALLATION_COMPLETED_SUCCESSFULLY\r"
+expect "INSTALLATION_COMPLETED_SUCCESSFULLY"
+expect {[$#] $}
+
+send "sudo poweroff -f || sudo halt -f -p\r"
+set timeout 30
+expect {
+    eof {}
+    timeout { puts "Poweroff complete" }
+}

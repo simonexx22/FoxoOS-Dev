@@ -4,37 +4,33 @@
 # written boot/grub/*.cfg and before the ISO is assembled.
 set -eu
 
+# Ensure fonts directory exists and fonts are available
+mkdir -p boot/grub/fonts
+for f in dejavu.pf2 unicode.pf2; do
+	if [ -e "boot/grub/${f}" ]; then
+		cp -f "boot/grub/${f}" "boot/grub/fonts/${f}"
+	fi
+done
+
 for _cfg in boot/grub/grub.cfg boot/grub/loopback.cfg; do
 	[ -e "${_cfg}" ] || continue
 	sed -i \
-		-e 's|^menuentry "Live system (amd64)"|menuentry "FoxoOS 1.0 Live (amd64)"|' \
-		-e 's|^menuentry "Live system (amd64 fail-safe mode)"|menuentry "FoxoOS 1.0 Live (amd64, fail-safe)"|' \
-		-e 's|^menuentry "Live system (autodetect)"|menuentry "FoxoOS 1.0 Live (autodetect)"|' \
-		-e 's|^menuentry "Live system (autodetect) (fail-safe mode)"|menuentry "FoxoOS 1.0 Live (autodetect, fail-safe)"|' \
-		-e 's|^menuentry "Live system, kernel |menuentry "FoxoOS 1.0 Live, kernel |' \
+		-e "s|^menuentry \"Live system (amd64)\"|menuentry \"Uruchom FoxoOS Live\" --hotkey=u|" \
+		-e "s|^menuentry \"Live system (amd64 fail-safe mode)\"|menuentry \"Tryb awaryjny\" --hotkey=t|" \
+		-e "s|^menuentry \"Live system (autodetect)\"|menuentry \"Uruchom FoxoOS Live\" --hotkey=u|" \
+		-e "s|^menuentry \"Live system (autodetect) (fail-safe mode)\"|menuentry \"Tryb awaryjny\" --hotkey=t|" \
+		-e "s|^menuentry \"Live system, kernel |menuentry \"Uruchom FoxoOS Live, kernel |" \
 		"${_cfg}"
 done
 
-# The theme title is the most visible label; keep it in sync if a future
-# live-build version overwrites the file.
+# The theme title and fonts must support full UTF-8 (Polish characters)
 if [ -e boot/grub/live-theme/theme.txt ]; then
-	sed -i 's|^title-text:.*|title-text: "FoxoOS 1.0 Live"|' boot/grub/live-theme/theme.txt
+	sed -i \
+		-e "s|^title-text:.*|title-text: \"Wybór systemu\"|" \
+		-e "s|\"Unifont Regular 16\"|\"DejaVu Sans Regular 16\"|g" \
+		-e "s|Wiersz polecen GRUB|Wiersz poleceń GRUB|g" \
+		boot/grub/live-theme/theme.txt
 fi
 
-# Ensure automatic boot timeout (live-build defaults to indefinite wait)
-# and mirror GRUB to serial port ttyS0 for headless/QEMU testing.
-if [ -e boot/grub/config.cfg ]; then
-	cat >> boot/grub/config.cfg <<'EOF'
-
-# FoxoOS: automatic boot timeout and serial console support
-set timeout=5
-set timeout_style=menu
-if serial --unit=0 --speed=115200 2>/dev/null; then
-	terminal_input --append serial
-	terminal_output --append serial
-fi
-EOF
-fi
-
-echo "FoxoOS: GRUB menu branded"
-grep -h '^menuentry' boot/grub/*.cfg 2>/dev/null || true
+echo "FoxoOS: GRUB menu branded and Polish fonts configured"
+grep -h "^menuentry" boot/grub/*.cfg 2>/dev/null || true

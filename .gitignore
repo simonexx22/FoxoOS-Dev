@@ -27,8 +27,27 @@
 /foxoos-*.iso
 /foxoos-*.iso.sha256
 /foxoos-*.packages
+/SHA256SUMS.txt
 
-# local test artifacts
+# VM disks & test environments
+*.qcow2
+*.vdi
+*.vmdk
+*.raw
+*.img
+!config/bootloaders/grub-pc/**.img
+!iso_root/**.img
+
+# local test artifacts & logs
 /tests/*.log
 /tests/*.png
+*.log
 debs-cache/
+
+# secrets & local environment
+*.key
+*.pem
+*.secret
+.env
+.env.*
+.DS_Store

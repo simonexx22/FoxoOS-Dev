@@ -5,7 +5,7 @@
  | | | (_) >  <| |__| |__| |____) |
  |_|  \___/_/\_\\____/\____/|_____/
 
-Welcome to FoxoOS 1.0 Live
+Welcome to FoxoOS 0.1.0-alpha Live
 Debian GNU/Linux 13 (trixie) base system
 
 FoxoOS uses sysvinit-core as PID 1 and OpenRC for services.

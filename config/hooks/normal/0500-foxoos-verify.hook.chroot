@@ -61,6 +61,21 @@ if command -v dpkg >/dev/null 2>&1 && ! dpkg --audit >/dev/null 2>&1; then
 	_fail=1
 fi
 
+
+if [ ! -x /usr/bin/systemd-machine-id-setup ]; then
+	echo "ERROR: /usr/bin/systemd-machine-id-setup is missing or not executable" >&2
+	_fail=1
+fi
+if ! rsync --version >/dev/null 2>&1; then
+	echo "ERROR: rsync is missing or broken" >&2
+	_fail=1
+fi
+
+if ! apt-get check >/dev/null 2>&1; then
+	echo "ERROR: apt-get check failed" >&2
+	_fail=1
+fi
+
 if [ "${_fail}" -ne 0 ]; then
 	echo "FoxoOS live image verification FAILED" >&2
 	exit 1

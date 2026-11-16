@@ -11,6 +11,7 @@ udev
 systemd-standalone-sysusers
 systemd-standalone-tmpfiles
 dbus
+dbus-bin
 network-manager
 ifupdown
 isc-dhcp-client
@@ -42,6 +43,8 @@ xorriso
 isolinux
 grub-common
 grub-pc-bin
+grub-pc
+grub2-common
 grub-efi-amd64-bin
 grub-efi-ia32-bin
 mtools
@@ -88,3 +91,6 @@ papirus-icon-theme
 qt6-svg-plugins
 librsvg2-common
 
+
+rsync
+libpopt0

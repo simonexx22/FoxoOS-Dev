@@ -9,10 +9,10 @@ windowPlacement: center
 strings:
     productName:         FoxoOS
     shortProductName:    FoxoOS
-    version:             1.0
-    shortVersion:        1.0
-    versionedName:       FoxoOS 1.0
-    shortVersionedName:  FoxoOS 1.0
+    version:             0.1.0-alpha
+    shortVersion:        0.1.0-alpha
+    versionedName:       FoxoOS 0.1.0-alpha
+    shortVersionedName:  FoxoOS 0.1.0-alpha
     bootloaderEntryName: FoxoOS
     productUrl:          https://foxoos.local
     supportUrl:          https://foxoos.local/support
