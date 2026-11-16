@@ -1,0 +1,59 @@
+#!/usr/bin/expect -f
+set timeout 600
+set iso "/home/foxos/foxoos/foxoos-1.0-amd64.iso"
+set disk "/tmp/test_sata.raw"
+
+log_user 1
+
+spawn qemu-system-x86_64 \
+    -name FoxoOS-sata-test \
+    -machine pc,accel=tcg \
+    -m 2048 -smp 2 \
+    -cdrom $iso \
+    -device ahci,id=ahci \
+    -drive file=$disk,format=raw,id=satadisk,if=none \
+    -device ide-hd,drive=satadisk,bus=ahci.0 \
+    -boot d \
+    -nic user,model=e1000 \
+    -display none -monitor none -serial stdio \
+    -no-reboot
+
+expect {
+    -re "foxoos login:" {}
+    timeout {
+        puts stderr "TIMEOUT waiting for login"
+        exit 1
+    }
+}
+
+send "foxos\r"
+expect "Password:"
+send "live\r"
+expect {[$#] $}
+
+send "echo SATA_TEST_START\r"
+expect "SATA_TEST_START"
+expect {[$#] $}
+
+send "lsblk -o NAME,TYPE,RO,SIZE,FSTYPE,MOUNTPOINTS\r"
+expect {[$#] $}
+
+send "sudo /usr/bin/calamares -d -platform offscreen > /tmp/calamares.log 2>&1 &\r"
+expect {[$#] $}
+
+send "sleep 30\r"
+expect {[$#] $}
+
+send "cat /tmp/calamares.log\r"
+expect {[$#] $}
+
+send "echo SATA_TEST_END\r"
+expect "SATA_TEST_END"
+expect {[$#] $}
+
+send "sudo poweroff -f || sudo halt -f -p\r"
+set timeout 15
+expect {
+    eof {}
+    timeout { puts "Poweroff complete" }
+}

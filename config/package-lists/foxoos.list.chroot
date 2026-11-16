@@ -50,6 +50,8 @@ dosfstools
 calamares
 calamares-settings-debian
 cryptsetup
+fdisk
+libfdisk1
 libkpmcore12
 libpython3.13
 libparted2t64

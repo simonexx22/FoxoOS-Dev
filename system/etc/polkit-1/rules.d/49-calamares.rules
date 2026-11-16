@@ -1,5 +1,8 @@
 polkit.addRule(function(action, subject) {
-    if (action.id == "com.github.calamares.calamares.pkexec.run") {
+    if (action.id == "com.github.calamares.calamares.pkexec.run" ||
+        action.id == "org.kde.kpmcore.externalcommand.init" ||
+        action.id.indexOf("org.kde.kpmcore.") === 0 ||
+        action.id.indexOf("org.freedesktop.udisks2.") === 0) {
         return polkit.Result.YES;
     }
 });
